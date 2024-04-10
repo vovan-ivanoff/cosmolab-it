@@ -1,0 +1,18 @@
+<html>
+  <head>
+    {% if title %}
+    <title>{{title}} - microblog</title>
+    {% else %}
+    <title>microblog</title>
+    {% endif %}
+  </head>
+  <body>
+    <h1>Выберите тему</h1>
+    <form action="/theme" method="post">
+        {% for theme in themes %}
+        <input type="radio" name="themes" id="{{theme}}" value="{{theme}}"> {{theme}} </input><br>
+        {% endfor %}
+        <input type="submit" value="SelectTheme"></input>
+    </form>
+  </body>
+</html>

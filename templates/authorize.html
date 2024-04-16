@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{title}}</title>
+</head>
+<body>
+<h2>Вход</h2>
+{% for msg in get_flashed_messages() %}
+<div class="flash">{{msg}}</div>
+{% endfor %}
+<form action="/authorization" method="post" class="form-contact">
+    <p><label>Имя: </label> <input type="text" name="username" value="" required />
+    <p><label>Пароль: </label> <input type="text" name="password" value="" required />
+    <p><input type="submit" value="Вход" />
+</form>
+<form action="/registration" >
+    <label> Нет аккаунта? </label><button> Регистрация </button>
+</form>
+</body>
+</html>

@@ -1,20 +1,21 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>{{title}}</title>
-</head>
-<body>
-<h1>Пользователь - {{name}}</h1>
-<form action="/single" >
-    <button> ИГРАТЬ ОДНОМУ </button>
-</form>
-<form action="/coop" >
-    <button> ИГРАТЬ В КОМАНДЕ </button>
-</form>
-</form>
-<form action="/authorization" >
+<html>
+  <head>
+    {% if title %}
+    <title>{{title}} - microblog</title>
+    {% else %}
+    <title>microblog</title>
+    {% endif %}
+  </head>
+  <body>
+    <h1>Выберите тему</h1>
+    <form action="/theme" method="post">
+        {% for theme in themes %}
+        <input type="radio" name="themes" id="{{theme}}" value="{{theme}}"> {{theme}} </input><br>
+        {% endfor %}
+        <input type="submit" value="SelectTheme"></input>
+    </form>
+  <form action="/authorization" >
     <button> ВЫЙТИ ИЗ АККАУНТА </button>
-</form>
-</body>
+  </form>
+  </body>
 </html>

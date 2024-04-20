@@ -1,13 +1,13 @@
 import json
 import random
 import sqlite3
-from flask import Flask, render_template, url_for, request, flash, redirect, session
 from hashlib import sha256
+from flask import Flask, render_template, url_for
+from flask import request, flash, redirect, session
 
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '21d6t3yfuyhrewoi1en3kqw'
-
 
 
 @app.route('/single', methods=['GET', 'POST'])
@@ -50,7 +50,9 @@ def coop():
 
 @app.route('/mode')
 def quiz():
-    return render_template('mode.html', title="Выбор режима", name=session['username'])
+    return render_template('mode.html',
+                           title="Выбор режима",
+                           name=session['username'])
 
 
 @app.route('/')

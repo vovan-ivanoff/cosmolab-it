@@ -8,7 +8,7 @@
   </head>
   <body>
     <h1>Выберите тему</h1>
-    <form action="/theme" method="post">
+    <form action="/single" method="post">
         {% for theme in themes %}
         <input type="radio" name="themes" id="{{theme}}" value="{{theme}}"> {{theme}} </input><br>
         {% endfor %}

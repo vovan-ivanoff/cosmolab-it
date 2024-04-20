@@ -1,16 +1,16 @@
 import json
 import random
 import sqlite3
-from flask import Flask, render_template, url_for, request, flash, redirect, session
 from hashlib import sha256
+from flask import Flask, render_template, url_for
+from flask import request, flash, redirect, session
 
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '21d6t3yfuyhrewoi1en3kqw'
 
 
-
-@app.route('/theme', methods=['GET', 'POST'])
+@app.route('/single', methods=['GET', 'POST'])
 def theme_selector():
     with open("questions.json", 'r', encoding='UTF-8') as f:
         questions: dict = json.load(f)['questions']
@@ -42,20 +42,17 @@ def question_prompt(theme, q_number):
                                question=vopros['question'],
                                variants=enumerate(vopros['answers']))
 
-      
-@app.route('/single')
-def single():
-    return render_template('single.html', title="Одиночная игра")
-
 
 @app.route('/coop')
 def coop():
     return render_template('coop.html', title="Командная игра")
 
 
-@app.route('/quiz')
+@app.route('/mode')
 def quiz():
-    return render_template('quiz.html', title="Выбор режима", name=session['username'])
+    return render_template('mode.html',
+                           title="Выбор режима",
+                           name=session['username'])
 
 
 @app.route('/')

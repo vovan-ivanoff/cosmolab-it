@@ -15,9 +15,13 @@ def theme_selector():
     with open("questions.json", 'r', encoding='UTF-8') as f:
         questions: dict = json.load(f)['questions']
     if request.method == 'POST':
-        session['questions_list'] = [random.choice(questions[
-                                     request.form.to_dict()['themes']])
-                                     for _ in range(20)]
+        tmp = []
+        for _ in range(20):
+            while (i := random.choice(
+                       questions[request.form.to_dict()['themes']])) in tmp:
+                pass
+            tmp.append(i)
+        session['questions_list'] = tmp.copy()
         session['right_count'] = 0
         return redirect(f'/victorina/{request.form.to_dict()['themes']}/0')
     elif request.method == 'GET':

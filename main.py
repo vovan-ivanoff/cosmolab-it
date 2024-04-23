@@ -12,7 +12,7 @@ app.config['SECRET_KEY'] = '21d6t3yfuyhrewoi1en3kqw'
 
 @app.route('/single', methods=['GET', 'POST'])
 def theme_selector():
-    with open("questions.json", 'r', encoding='UTF-8') as f:
+    with open('questions.json', 'r', encoding='UTF-8') as f:
         questions: dict = json.load(f)['questions']
     if request.method == 'POST':
         tmp = []
@@ -25,7 +25,7 @@ def theme_selector():
         session['right_count'] = 0
         return redirect(f'/victorina/{request.form.to_dict()['themes']}/0')
     elif request.method == 'GET':
-        return render_template("quiz.html",
+        return render_template('quiz.html',
                                title='Home',
                                themes=questions)
 
@@ -42,20 +42,20 @@ def question_prompt(theme, q_number):
         else:
             return redirect(f'/victorina/{theme}/{int(q_number) + 1}')
     elif request.method == 'GET':
-        return render_template("question.html",
+        return render_template('question.html',
                                question=vopros['question'],
                                variants=enumerate(vopros['answers']))
 
 
 @app.route('/coop')
 def coop():
-    return render_template('coop.html', title="Командная игра")
+    return render_template('coop.html', title='Командная игра')
 
 
 @app.route('/mode')
 def quiz():
     return render_template('mode.html',
-                           title="Выбор режима",
+                           title='Выбор режима',
                            name=session['username'])
 
 
@@ -67,14 +67,11 @@ def authorize():
     if request.method == 'POST':
         db = sqlite3.connect('users_data.db')
         c = db.cursor()
-        # c.execute("""CREATE TABLE users (
-        # name text,
-        # password text
-        # )""")
+
         username = request.form['username']
         password = request.form['password']
         crypto_password = sha256(password.encode('utf-8')).hexdigest()
-        query = "SELECT * FROM users WHERE name = ?"
+        query = 'SELECT * FROM users WHERE name = ?'
         c.execute(query, (username,))
         usr_psw = c.fetchall()
         if len(usr_psw) != 0:
@@ -82,18 +79,16 @@ def authorize():
             if usr_psw[0] == username and usr_psw[1] == crypto_password:
                 flash('вы вошли в аккаунт')
                 session['username'] = username
-                render_template('authorize.html', title="Вход")
+                render_template('authorize.html', title='Вход')
                 return redirect(url_for('quiz'))
             else:
                 flash('ошибка')
         else:
             flash('такого аккаунта нет')
-        # query = "SELECT * FROM users"
-        # c.execute(query)
-        # print(c.fetchall())
+
         db.commit()
         db.close()
-    return render_template('authorize.html', title="Вход")
+    return render_template('authorize.html', title='Вход')
 
 
 @app.route('/registration', methods=['POST', 'GET'])
@@ -101,28 +96,25 @@ def registration():
     if request.method == 'POST':
         db = sqlite3.connect('users_data.db')
         c = db.cursor()
-        # c.execute("""CREATE TABLE users (
-        # name text,
-        # password text
-        # )""")
+
         username = request.form['username']
         password = request.form['password']
         crypto_password = sha256(password.encode('utf-8')).hexdigest()
-        query = "SELECT * FROM users WHERE name = ?"
+        query = 'SELECT * FROM users WHERE name = ?'
         c.execute(query, (username,))
         finded = c.fetchall()
         print(finded)
         if len(finded) == 0:
-            query = "INSERT INTO users VALUES (?, ?)"
+            query = 'INSERT INTO users VALUES (?, ?)'
             c.execute(query, (username, crypto_password))
-            c.execute("SELECT * FROM users")
+            c.execute('SELECT * FROM users')
 
             flash('аккаунт создан')
             db.commit()
         if len(finded) == 1:
             flash('такой аккаунт уже существует')
         db.close()
-    return render_template('registration.html', title="Регистрация")
+    return render_template('registration.html', title='Регистрация')
 
 
 if __name__ == '__main__':

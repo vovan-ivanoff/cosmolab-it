@@ -4,10 +4,17 @@ import sqlite3
 from hashlib import sha256
 from flask import Flask, render_template, url_for
 from flask import request, flash, redirect, session
-
+from flask_socketio import SocketIO, send, emit, join_room, leave_room
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '21d6t3yfuyhrewoi1en3kqw'
+socketio = SocketIO(app, cors_allowed_origins='*')
+
+
+@socketio.on('message')
+def handle_message(message):
+    print("Received message: " + message)
+    send(message, broadcast=True)
 
 
 @app.route('/single', methods=['GET', 'POST'])
@@ -171,4 +178,5 @@ def registration():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # app.run(debug=True)
+    socketio.run(app, host="127.0.0.1", allow_unsafe_werkzeug=True)

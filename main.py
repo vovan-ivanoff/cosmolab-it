@@ -4,11 +4,23 @@ import sqlite3
 from hashlib import sha256
 from flask import Flask, render_template, url_for
 from flask import request, flash, redirect, session
-
+from flask_socketio import SocketIO, send
+from string import ascii_uppercase
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '21d6t3yfuyhrewoi1en3kqw'
+socketio = SocketIO(app, cors_allowed_origins='*')
+rooms = {}
 
+def generate_unique_code(length):
+    while True:
+        code = ""
+        for _ in range(length):
+            code += random.choice(ascii_uppercase)
+        if code not in rooms:
+            break
+
+    return code
 
 @app.route('/single', methods=['GET', 'POST'])
 def theme_selector():
@@ -23,17 +35,25 @@ def theme_selector():
             tmp.append(i)
         session['questions_list'] = tmp.copy()
         session['right_count'] = 0
-        return redirect(f'/victorina/{request.form.to_dict()['themes']}/0')
+        return redirect(f"/victorina/{request.form.to_dict()['themes']}/0")
     elif request.method == 'GET':
         return render_template("quiz.html",
                                title='Home',
                                themes=questions)
 
 
+@socketio.on('update_data')
+def handle_update(_):
+    global rooms
+    rooms[session.get('room')]["members_name"].add(session.get('username'))
+    rooms[session.get('room')]['members'] += 1
+    socketio.emit('data_updated', list(rooms[session.get('room')]["members_name"]))
+
+
 @app.route('/victorina/<theme>/<q_number>', methods=['GET', 'POST'])
 def question_prompt(theme, q_number):
     if int(q_number) == 20:
-        return f'правильных {session['right_count']}'
+        return f"правильных {session['right_count']}"
     vopros = session['questions_list'][int(q_number)]
     if request.method == 'POST':
         if int(request.form.to_dict()['answers']) == vopros['correct']:
@@ -47,10 +67,28 @@ def question_prompt(theme, q_number):
                                variants=enumerate(vopros['answers']))
 
 
-@app.route('/coop')
-def coop():
-    return render_template('coop.html', title="Командная игра")
+@app.route("/room")
+def room():
+    return render_template('waitroom.html', code=session.get('room'), p=rooms[session.get('room')]['members'])
 
+@app.route('/createroom', methods=['POST', 'GET'])
+def create_room():
+    if request.method == "POST":
+        code = request.form.get("code")
+        join = request.form.get("join", False)
+        create = request.form.get("create", False)
+        if join != False and not code:
+            return render_template("createroom.html", error="Введите код", code=code)
+        room = code
+        if create != False:
+            room = generate_unique_code(4)
+            rooms[room] = {"members": 0, 'members_name': set()}
+        elif code not in rooms:
+            return render_template("createroom.html", error="Неверный код", code=code)
+        session["room"] = room
+        return redirect(url_for("room"))
+
+    return render_template("createroom.html", rooms=rooms)
 
 @app.route('/mode')
 def quiz():
@@ -126,4 +164,5 @@ def registration():
 
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    #app.run(debug=True)
+    socketio.run(app, host="localhost", allow_unsafe_werkzeug=True)

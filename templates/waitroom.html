@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Комната ожидания</title>
+
+</head>
+<body>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.js"></script>
+
+<h1> код:{{code}} </h1>
+    <script>
+        $(document).ready(function() {
+            const socket = io();
+            socket.on('connect', () => {
+                socket.emit('update_data', 'hey');
+            });
+
+            socket.on('data_updated', (users) => {
+                document.getElementById('users').innerText = users;
+            });
+        })
+    </script>
+    <p> Игра начнется, как только подключатся 4 игрока...
+    <p> Участники:
+    <p><div id="users"></div>
+  <form action="/createroom" >
+    <button> НАЗАД </button>
+  </form>
+</body>
+</html>

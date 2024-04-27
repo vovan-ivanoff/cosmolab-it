@@ -7,12 +7,16 @@
     {% endif %}
   </head>
   <body>
-    <h1>Выберите тему</h1>
-    <form action="/single" method="post">
-        {% for theme in themes %}
-        <input type="radio" name="themes" id="{{theme}}" value="{{theme}}"> {{theme}} </input><br>
+    <h1>Рейтинг пользователей</h1>
+    <form action="/rating">
+        {% for row in rows %}
+        <tr>
+            {% for value in row %}
+            <td>{{value}}</td>
+            {% endfor %}
+            <br>
+        </tr>
         {% endfor %}
-        <input type="submit" value="Начать играть"></input>
     </form>
   <form action="/authorization" >
     <button> ВЫЙТИ ИЗ АККАУНТА </button>

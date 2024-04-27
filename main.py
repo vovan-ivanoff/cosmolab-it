@@ -40,7 +40,7 @@ def question_prompt(theme, q_number):
         query = "SELECT rating FROM users WHERE name = ?"
         cursor.execute(query, (session['username'],))
         usr_psw = cursor.fetchall()
-        print("ASDFSDGHGMJ<KJHFGDGSAS", usr_psw)
+
         cursor.execute('UPDATE users SET rating = ? WHERE name = ?', (rating + usr_psw[0][0], session['username']))
         connection.commit()
         connection.close()
@@ -62,6 +62,16 @@ def question_prompt(theme, q_number):
 @app.route('/coop')
 def coop():
     return render_template('coop.html', title="Командная игра")
+
+@app.route('/rating')
+def rating():
+    connection = sqlite3.connect('users_data.db')
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM users")
+    ids = [(row[0], row[2]) for row in cursor]
+    ids = sorted(ids, reverse=True, key=lambda x: x[1])
+    session['users_rating'] = ids.copy()
+    return render_template("rating.html", rows=ids)
 
 
 @app.route('/mode')

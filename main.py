@@ -129,19 +129,27 @@ def registration():
         # )""")
         username = request.form['username']
         password = request.form['password']
+
+        #mail + test of loyalty
+        mail = request.form['mail']
+        correct_mail = True
+        if '@' not in mail:
+            correct_mail = False
         rating = 0
         crypto_password = sha256(password.encode('utf-8')).hexdigest()
         query = "SELECT * FROM users WHERE name = ?"
         c.execute(query, (username,))
         finded = c.fetchall()
         print(finded)
-        if len(finded) == 0:
-            query = "INSERT INTO users VALUES (?, ?, ?)"
-            c.execute(query, (username, crypto_password, rating))
+        if len(finded) == 0 and correct_mail is True:
+            query = "INSERT INTO users VALUES (?, ?, ?, ?)"
+            c.execute(query, (username, crypto_password, rating, mail))
             c.execute("SELECT * FROM users")
 
             flash('аккаунт создан')
             db.commit()
+        elif correct_mail is False and len(finded) == 0:
+            flash('неверно указан адрес электронной почты')
         if len(finded) == 1:
             flash('такой аккаунт уже существует')
         db.close()

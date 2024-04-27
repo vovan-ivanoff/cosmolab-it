@@ -23,7 +23,7 @@ def theme_selector():
             tmp.append(i)
         session['questions_list'] = tmp.copy()
         session['right_count'] = 0
-        return redirect(f'/victorina/{request.form.to_dict()['themes']}/0')
+        return redirect(f'/victorina/{request.form.to_dict()["themes"]}/0')
     elif request.method == 'GET':
         return render_template("quiz.html",
                                title='Home',
@@ -33,7 +33,19 @@ def theme_selector():
 @app.route('/victorina/<theme>/<q_number>', methods=['GET', 'POST'])
 def question_prompt(theme, q_number):
     if int(q_number) == 20:
-        return f'правильных {session['right_count']}'
+        #update rating in users_data.db
+        rating = session["right_count"]
+        connection = sqlite3.connect('users_data.db')
+        cursor = connection.cursor()
+        query = "SELECT rating FROM users WHERE name = ?"
+        cursor.execute(query, (session['username'],))
+        usr_psw = cursor.fetchall()
+        print("ASDFSDGHGMJ<KJHFGDGSAS", usr_psw)
+        cursor.execute('UPDATE users SET rating = ? WHERE name = ?', (rating + usr_psw[0][0], session['username']))
+        connection.commit()
+        connection.close()
+
+        return f'правильных ответов {rating}'
     vopros = session['questions_list'][int(q_number)]
     if request.method == 'POST':
         if int(request.form.to_dict()['answers']) == vopros['correct']:
@@ -107,14 +119,15 @@ def registration():
         # )""")
         username = request.form['username']
         password = request.form['password']
+        rating = 0
         crypto_password = sha256(password.encode('utf-8')).hexdigest()
         query = "SELECT * FROM users WHERE name = ?"
         c.execute(query, (username,))
         finded = c.fetchall()
         print(finded)
         if len(finded) == 0:
-            query = "INSERT INTO users VALUES (?, ?)"
-            c.execute(query, (username, crypto_password))
+            query = "INSERT INTO users VALUES (?, ?, ?)"
+            c.execute(query, (username, crypto_password, rating))
             c.execute("SELECT * FROM users")
 
             flash('аккаунт создан')

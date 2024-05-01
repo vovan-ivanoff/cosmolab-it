@@ -1,0 +1,26 @@
+<html>
+  <head>
+    {% if title %}
+    <title>{{title}} - microblog</title>
+    {% else %}
+    <title>microblog</title>
+    {% endif %}
+  </head>
+  <body>
+    <h1>Рейтинг пользователей</h1>
+    <form action="/rating">
+        {% for row in rows %}
+        <tr>
+            {% for value in row %}
+            <td>{{value}}</td>
+            {% endfor %}
+            <br>
+        </tr>
+        {% endfor %}
+    </form>
+  <form action="/authorization" >
+    <button><a href="javascript:history.back()">Назад</button></a><br>  
+    <button> ВЫЙТИ ИЗ АККАУНТА </button>
+  </form>
+  </body>
+</html>

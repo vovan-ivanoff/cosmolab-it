@@ -10,9 +10,10 @@
 <div class="flash">{{msg}}</div>
 {% endfor %}
 <form action="/registration" method="post" class="form-contact">
-    <p>Придумайте имя и пароль</p>
+    <p>Придумайте имя и пароль, укажите адрес электронной почты</p>
     <p><label>Имя: </label> <input type="text" name="username" value="" required />
     <p><label>Пароль: </label> <input type="text" name="password" value="" required />
+    <p><label>Электронная почта: </label> <input type="text" name="mail" value="" required />
     <p><input type="submit" value="Регистрация" />
 </form>
 <form action="/authorization" >

@@ -1,4 +1,86 @@
 <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width", initial-scale=1>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+  }
+
+  nav {
+    display: flex;
+    justify-content: space-around;
+    background-color: #d79717;
+    padding: 2em;
+  }
+
+  nav ul {
+    list-style-type: none;
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+  }
+
+  nav li {
+    color: rgb(211, 41, 41);
+    margin: 0 1em;
+  }
+
+  nava {
+    color: rgb(123, 18, 18);
+    text-decoration: none;
+  }
+
+  @media (max-width: 600px) {
+    nav {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    nav ul {
+      flex-direction: column;
+      align-items: center;
+    }
+
+    nav li {
+      margin: 0.5em 0;
+    }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <ul>
+    <form action="/single" >
+        <button style="font-size: 20px;"> ИГРАТЬ ОДНОМУ </button>
+    </form>
+    
+    <form action="/coop" >
+        <button style="font-size: 20px;"> ИГРАТЬ В КОМАНДЕ </button>
+    </form>
+    <form action="/rating" >
+        <button style="font-size: 20px;"> РЕЙТИНГ </button>
+    </form>
+    </form>
+    <form action="/authorization" >
+        <button style="font-size: 20px;"> ВЫЙТИ ИЗ АККАУНТА </button>
+    </form>
+  </ul>
+</nav>
+<h3 align="center">О проекте:</h3>
+<p>Данный сервис был создан в качестве учебного проекта по дисциплине "IT проекты"
+    студетами 1 курса Московского Авиационного Университета, кафедра 806. <br>
+    На сайте вы можете играть онлайн или в одиночку в викторины. Формат игры следующий
+    - 4 вопроса, 1 правильный ответ, 30 секунд. <br>
+    Также присутствует единый рейтинг, в котором указано количество баллов у каждого из игроков.  <br>
+    Приятного вам времяпрепровождения, и помните: <b>МАИ ЭТО Я, МАИ ЭТО МЫ, МАИ ЭТО ЛУЧШИЕ ЛЮДИ СТРАНЫ </b>
+
+</p> 
+</body>
+</html>
+
+<!-- <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -20,4 +102,4 @@
     <button> ВЫЙТИ ИЗ АККАУНТА </button>
 </form>
 </body>
-</html>
+</html> -->

@@ -149,14 +149,13 @@ def registration():
         rating = 0
         crypto_password = sha256(password.encode('utf-8')).hexdigest()
         
-        crypto_mail = sha256(mail.encode('utf-8')).hexdigest()
         query = "SELECT * FROM users WHERE name = ?"
         c.execute(query, (username,))
         finded = c.fetchall()
         print(finded)
         if len(finded) == 0 and correct_mail is True and error is False:
             query = "INSERT INTO users VALUES (?, ?, ?, ?)"
-            c.execute(query, (username, crypto_password, rating, crypto_mail))
+            c.execute(query, (username, crypto_password, rating, mail))
             c.execute("SELECT * FROM users")
 
             flash('аккаунт создан')

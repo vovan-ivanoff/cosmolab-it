@@ -17,6 +17,7 @@ def theme_selector():
     if request.method == 'POST':
         tmp = []
         for _ in range(20):
+            print(request.form.to_dict())
             while (i := random.choice(
                        questions[request.form.to_dict()['themes']])) in tmp:
                 pass

@@ -97,7 +97,8 @@ def authorize():
         # )""")
         username = request.form['username']
         password = request.form['password']
-        crypto_password = sha256(password.encode('utf-8')).hexdigest()
+        password_and_username = password + username
+        crypto_password = sha256(password_and_username.encode('utf-8')).hexdigest()
         
         query = "SELECT * FROM users WHERE name = ?"
         c.execute(query, (username,))
@@ -147,7 +148,8 @@ def registration():
         if '@' not in mail:
             correct_mail = False
         rating = 0
-        crypto_password = sha256(password.encode('utf-8')).hexdigest()
+        password_and_username = password + username
+        crypto_password = sha256(password_and_username.encode('utf-8')).hexdigest()
         
         query = "SELECT * FROM users WHERE name = ?"
         c.execute(query, (username,))

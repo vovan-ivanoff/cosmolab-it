@@ -127,12 +127,20 @@ def registration():
         # name text,
         # password text
         # )""")
+        correct_mail = True
+        error = False
         username = request.form['username']
+        if username == "":
+            error = True
+            flash('введите никнейм')
         password = request.form['password']
+        if password == "":
+            error = True
+            flash('введите пароль')
 
         #mail + test of loyalty
         mail = request.form['mail']
-        correct_mail = True
+        
         if '@' not in mail:
             correct_mail = False
         rating = 0
@@ -141,7 +149,7 @@ def registration():
         c.execute(query, (username,))
         finded = c.fetchall()
         print(finded)
-        if len(finded) == 0 and correct_mail is True:
+        if len(finded) == 0 and correct_mail is True and error is False:
             query = "INSERT INTO users VALUES (?, ?, ?, ?)"
             c.execute(query, (username, crypto_password, rating, mail))
             c.execute("SELECT * FROM users")
@@ -150,7 +158,7 @@ def registration():
             db.commit()
         elif correct_mail is False and len(finded) == 0:
             flash('неверно указан адрес электронной почты')
-        if len(finded) == 1:
+        if len(finded) == 1 and error is False:
             flash('такой аккаунт уже существует')
         db.close()
     return render_template('registration.html', title="Регистрация")

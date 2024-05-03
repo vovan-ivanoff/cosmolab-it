@@ -17,6 +17,7 @@ def theme_selector():
     if request.method == 'POST':
         tmp = []
         for _ in range(20):
+            print(request.form.to_dict())
             while (i := random.choice(
                        questions[request.form.to_dict()['themes']])) in tmp:
                 pass
@@ -69,6 +70,7 @@ def rating():
     cursor = connection.cursor()
     cursor.execute("SELECT * FROM users")
     ids = [(row[0], row[2]) for row in cursor]
+    
     ids = sorted(ids, reverse=True, key=lambda x: x[1])
     session['users_rating'] = ids.copy()
     return render_template("rating.html", rows=ids)
@@ -95,7 +97,9 @@ def authorize():
         # )""")
         username = request.form['username']
         password = request.form['password']
-        crypto_password = sha256(password.encode('utf-8')).hexdigest()
+        password_and_username = password + username
+        crypto_password = sha256(password_and_username.encode('utf-8')).hexdigest()
+        
         query = "SELECT * FROM users WHERE name = ?"
         c.execute(query, (username,))
         usr_psw = c.fetchall()
@@ -127,21 +131,31 @@ def registration():
         # name text,
         # password text
         # )""")
+        correct_mail = True
+        error = False
         username = request.form['username']
+        if username == "":
+            error = True
+            flash('введите никнейм')
         password = request.form['password']
+        if password == "":
+            error = True
+            flash('введите пароль')
 
         #mail + test of loyalty
         mail = request.form['mail']
-        correct_mail = True
+        
         if '@' not in mail:
             correct_mail = False
         rating = 0
-        crypto_password = sha256(password.encode('utf-8')).hexdigest()
+        password_and_username = password + username
+        crypto_password = sha256(password_and_username.encode('utf-8')).hexdigest()
+        
         query = "SELECT * FROM users WHERE name = ?"
         c.execute(query, (username,))
         finded = c.fetchall()
         print(finded)
-        if len(finded) == 0 and correct_mail is True:
+        if len(finded) == 0 and correct_mail is True and error is False:
             query = "INSERT INTO users VALUES (?, ?, ?, ?)"
             c.execute(query, (username, crypto_password, rating, mail))
             c.execute("SELECT * FROM users")
@@ -150,7 +164,7 @@ def registration():
             db.commit()
         elif correct_mail is False and len(finded) == 0:
             flash('неверно указан адрес электронной почты')
-        if len(finded) == 1:
+        if len(finded) == 1 and error is False:
             flash('такой аккаунт уже существует')
         db.close()
     return render_template('registration.html', title="Регистрация")

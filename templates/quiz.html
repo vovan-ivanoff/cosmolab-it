@@ -1,4 +1,51 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Выбор темы викторины</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .theme-button {
+            display: inline-block;
+            margin: 10px;
+            padding: 15px 30px;
+            font-size: 20px;
+            text-decoration: none;
+            color: #fff;
+            background-color: #dc931f;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .theme-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Выберите тему викторины:</h1>
+    <form action="/single" method="post">
+      {% for theme in themes %}
+      <!-- <button><input type="radio" class="theme-button" name="themes" id="{{theme}}" value="{{theme}}"> {{theme}} </a><> -->
+      <button class="theme-button" type="radio" name="themes" id="{{theme}}" value="{{theme}}">{{theme}}</button>
+      {% endfor %}
+      <!-- <input type="submit" value="Начать играть"></input> -->
+  </form>
+  <form action="/authorization" >
+    <button><a href="javascript:history.back()">Назад</button></a><br>
+    <!-- <button> ВЫЙТИ ИЗ АККАУНТА </button> -->
+  </form>
+</body>
+</html>
+
+<!-- <html>
   <head>
     {% if title %}
     <title>{{title}} - microblog</title>
@@ -19,4 +66,4 @@
     <button> ВЫЙТИ ИЗ АККАУНТА </button>
   </form>
   </body>
-</html>
+</html> -->

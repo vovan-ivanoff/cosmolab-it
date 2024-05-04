@@ -1,8 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
+    
 <head>
+    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
     <title>Ответьте на вопрос</title>
     <style>
         body {
@@ -28,42 +31,68 @@
             background-color: #0056b3;
         }
     </style>
+    
+    <iframe src="https://giphy.com/embed/ZdT2zDh3Bvnkk" width="80" height="40" frameBorder="0" class="giphy-embed" allowFullScreen></iframe><p><a href="https://giphy.com/gifs/ZdT2zDh3Bvnkk"></a></p>
+    
 </head>
 <body>
     <h1>Ответьте на вопрос</h1>
     <h2>{{question}}</h2>
+    
     <form method="post">
+        <meta http-equiv="refresh" content="10;/victorina/{{theme}}/{{q_number}}">
         {% for variant in variants %}
-
+        
         <button class="theme-button" type="radio" name="answers" id="{{variant[0]}}" value="{{variant[0]}}">{{variant[1]}}</button>
         <!-- <input type="radio" name="answers" id="{{variant[0]}}" value="{{variant[0]}}"> {{variant[1]}} </input><br> -->
+        
+        
         {% endfor %}
-
-        <button align="center"><a href="javascript:history.back()">Назад</button></a><br>
+        {% if q_number - 2 >= 0 %}
+        <button align="center"><a href="/victorina/{{theme}}/{{q_number-2}}">Назад</button></a>
+        {% else %}
+        <button align="center"><a href="/single?">Назад</button></a><br>
+        {% endif %}
+        
+       
+        
+           
+        <!--#else-->
+            <!-- <button align="center"><a href="/single?">Назад</button></a><br> -->
+        
         <!-- <input type="submit" value="Следующий вопрос"></input> -->
+        
     </form>
+    <!-- <script>
+    function sayHi() {
+        alert("HI")
+      }
+      
+    setTimeout(sayHi, 5000);
+    </script> -->
+    
     
 </body>
 </html>
 
 
-<!-- <html>
-  <head>
-    {% if title %}
-    <title>{{title}} - microblog</title>
-    {% else %}
-    <title>microblog</title>
-    {% endif %}
-  </head>
-  <body>
-    <h1>СОЗРЕЛ ВОПРОС:</h1>
-    <h2>{{question}}</h2>
-    <form method="post">
-        {% for variant in variants %}
-        <input type="radio" name="answers" id="{{variant[0]}}" value="{{variant[0]}}"> {{variant[1]}} </input><br>
-        {% endfor %}
-        <button><a href="javascript:history.back()">Назад</button></a><br>
-        <input type="submit" value="Следующий вопрос"></input>
-    </form>
-  </body>
-</html> -->
+ <!-- <html>
+//   <head>
+//     {% if title %}
+//     <title>{{title}} - microblog</title>
+//     {% else %}
+//     <title>microblog</title>
+//     {% endif %}
+//   </head>
+//   <body>
+//     <h1>СОЗРЕЛ ВОПРОС:</h1>
+//     <h2>{{question}}</h2>
+//     <form method="post">
+//         {% for variant in variants %}
+//         <input type="radio" name="answers" id="{{variant[0]}}" value="{{variant[0]}}"> {{variant[1]}} </input><br>
+//         {% endfor %}
+//         <button><a href="javascript:history.back()">Назад</button></a><br>
+//         <input type="submit" value="Следующий вопрос"></input>
+//     </form>
+//   </body>
+// </html> -->

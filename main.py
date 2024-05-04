@@ -4,6 +4,7 @@ import sqlite3
 from hashlib import sha256
 from flask import Flask, render_template, url_for
 from flask import request, flash, redirect, session
+import datetime
 
 
 app = Flask(__name__)
@@ -31,8 +32,12 @@ def theme_selector():
                                themes=questions)
 
 
+
+
+
 @app.route('/victorina/<theme>/<q_number>', methods=['GET', 'POST'])
 def question_prompt(theme, q_number):
+    
     if int(q_number) == 20:
         #update rating in users_data.db
         rating = session["right_count"]
@@ -48,7 +53,10 @@ def question_prompt(theme, q_number):
 
         return f'правильных ответов {rating}'
     vopros = session['questions_list'][int(q_number)]
+ 
     if request.method == 'POST':
+        
+    
         if int(request.form.to_dict()['answers']) == vopros['correct']:
             session['right_count'] += 1
             return redirect(f'/victorina/{theme}/{int(q_number) + 1}')
@@ -56,8 +64,10 @@ def question_prompt(theme, q_number):
             return redirect(f'/victorina/{theme}/{int(q_number) + 1}')
     elif request.method == 'GET':
         return render_template("question.html",
-                               question=vopros['question'],
-                               variants=enumerate(vopros['answers']))
+                                theme=theme,
+                                q_number=int(q_number)+1,
+                                question=vopros['question'],
+                                variants=enumerate(vopros['answers']))
 
 
 @app.route('/coop')

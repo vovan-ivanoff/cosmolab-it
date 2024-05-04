@@ -35,11 +35,12 @@
       {% for theme in themes %}
       <!-- <button><input type="radio" class="theme-button" name="themes" id="{{theme}}" value="{{theme}}"> {{theme}} </a><> -->
       <button class="theme-button" type="radio" name="themes" id="{{theme}}" value="{{theme}}">{{theme}}</button>
+      
       {% endfor %}
       <!-- <input type="submit" value="Начать играть"></input> -->
   </form>
   <form action="/authorization" >
-    <button><a href="javascript:history.back()">Назад</button></a><br>
+    <button><a href="/mode">Назад</button></a><br>
     <!-- <button> ВЫЙТИ ИЗ АККАУНТА </button> -->
   </form>
 </body>

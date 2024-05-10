@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{title}}</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/robbmj/simple-js-countdown-timer@master/countdowntimer.js"></script>
+</head>
+<body>
+<h1> Комната {{code}} </h1>
+<p id="pcount"></p>
+<button id="startBtn">START</button>
+<script type="text/javascript">
+    $(document).ready(function() {
+        var socket = io.connect('http://localhost:5000');
+        var d;
+        var t;
+        $("#quiz").hide()
+        socket.on('message', function(data) {
+            $('#messages').append($('<p>').text(data));
+        });
+        $('#sendBtn').on('click', function() {
+            socket.send($('#message').val());
+            $('#message').val('');
+        });
+        $('#startBtn').on('click', function() {
+            $("#results").hide()
+            theme = $('input[name="themes"]:checked').val()
+            socket.emit("start", theme);
+        });
+        socket.on('pcount', function(data) {
+            $('#pcount').text(data);
+        });
+        socket.on('themes', function(data){
+            console.log(data)
+            for(let i = 0; i < data.length; i++){
+                tmpl = `<input type="radio" name="themes" value="${data[i]}">${data[i]}}</input><br>`
+                $("#results").append(tmpl);
+            }
+        });
+        socket.on('question', function(data){
+            $("#quiz").show()
+            $("#results").hide()
+            $('#vopros').text(data['question'])
+            d = data;
+            for (let i = 0; i < 4; i++){
+                console.log("#ans" + i.toString())
+                console.log(data['answers'][i])
+                $("#ans" + i.toString()).text(data['answers'][i]);
+            }
+            t = CountDownTimer(data['time']);
+            t.onTick(format).onTick(restart).start();
+        });
+        $('#ansBtn').on('click', function() {
+            if($('input[name="answers"]:checked').val() == d["correct"]){
+                socket.emit('answer', "corr");
+            } else{
+                socket.emit('answer', "not_corr");
+            }
+            t = CountDownTimer(99999);
+            t.start();
+            
+        });
+        socket.on('wait', function() {
+            $('#quiz').hide()
+            $("#results").text("Ждем других игроков")
+            $("#results").show()
+        });
+        socket.on('end', function(data) {
+            res = '';
+            for(var i in data){
+              res += (i + " - "); // alerts key
+              res += (data[i] + "<br>"); //alerts key's value
+            }
+            $('#quiz').hide()
+            $("#results").html(res)
+            $("#results").show()
+        });
+        function restart() {
+          if (this.expired()) {
+            socket.emit('answer', "not_corr");
+          }
+        }
+        function format(minutes, seconds) {
+          minutes = minutes < 10 ? "0" + minutes : minutes;
+          seconds = seconds < 10 ? "0" + seconds : seconds;
+          $("#countdown").text(minutes + ':' + seconds)     ;
+        }
+    })
+</script>
+<div id="messages">
+    <div>
+        <input type="text" id="message" placeholder="Message">
+        <button id="sendBtn">Send</button>
+    </div>
+</div>
+<div id="quiz">
+    <p id="vopros"></p>
+    <p id="countdown"></p>
+    <input type="radio" name="answers" value="0"><div id="ans0"></div></input><br>
+    <input type="radio" name="answers" value="1"><div id="ans1"></div></input><br>
+    <input type="radio" name="answers" value="2"><div id="ans2"></div></input><br>
+    <input type="radio" name="answers" value="3"><div id="ans3"></div></input><br>
+    <button id="ansBtn">Answer</button>
+</div>
+<div id="results"></div>
+<form action="/coop" >
+    <button> ВЫЙТИ </button>
+</form>
+</body>
+</html>

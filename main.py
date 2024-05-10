@@ -1,3 +1,4 @@
+from string import ascii_uppercase
 import json
 import random
 import sqlite3
@@ -5,49 +6,122 @@ from hashlib import sha256
 from flask import Flask, render_template, url_for
 from flask import request, flash, redirect, session
 from flask_socketio import SocketIO, send, emit, join_room, leave_room
-from flask_socketio import SocketIO, send, emit, join_room, leave_room
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '21d6t3yfuyhrewoi1en3kqw'
 socketio = SocketIO(app, cors_allowed_origins='*')
+rooms = {}
+
+
+def generate_unique_code(length):
+    while True:
+        code = ""
+        for _ in range(length):
+            code += random.choice(ascii_uppercase)
+        if code not in rooms:
+            break
+    return code
+
+
+def generate_qs(theme):
+    tmp = []
+    with open("questions.json", 'r', encoding='UTF-8') as f:
+        questions: dict = json.load(f)['questions']
+    for _ in range(20):
+        while (i := random.choice(
+                   questions[theme])) in tmp:
+            pass
+        tmp.append(i)
+    return tmp.copy()
+
+
+def get_themes():
+    with open("questions.json", 'r', encoding='UTF-8') as f:
+        questions: dict = json.load(f)['questions']
+    return list(questions.keys())
+
+
+@socketio.on('connect')
+def handle_connect(_):
+    name = session['username']
+    room = session.get('room')
+    if name is None or room is None:
+        return
+    if room not in rooms:
+        leave_room(room)
+    join_room(room)
+    send(f"{name} заходит в чат", to=room)
+    session['coop_progress'] = 0
+    rooms[room]["members"] += 1
+    rooms[room]["result"][name] = 0
+    rooms[room]["ready"][name] = False
+    emit("pcount", rooms[room]['members'], to=room)
+    emit("themes", rooms[room]["themes"])
+
+
+@socketio.on('start')
+def handle_start(theme):
+    room = session["room"]
+    questions = generate_qs(theme)
+    rooms[room]['questions'] = questions
+    emit("question", rooms[room]['questions'][0], to=room)
+
+
+@socketio.on('answer')
+def handle_answer(answer):
+    room = rooms[session["room"]]
+    name = session["username"]
+    if answer == 'corr':
+        room['result'][name] += 1
+    session['coop_progress'] += 1
+    if session['coop_progress'] >= len(room['questions']):
+        room['ready'][name] = True
+        emit('wait')
+        flag = True
+        for n in room['ready']:
+            flag = flag and room['ready'][n]
+        if flag:
+            emit("end", room["result"], to=session['room'])
+    else:
+        emit("question", room['questions'][session['coop_progress']])
 
 
 @socketio.on('message')
-def handle_message(message):
-    print("Received message: " + message)
-    send(message, broadcast=True)
+def handle_chat_message(message):
+    result = session['username'] + " : " + message
+    print("Received message: " + result)
+    send(result, to=session["room"])
 
 
-@socketio.on('message')
-def handle_message(message):
-    print("Received message: " + message)
-    send(message, broadcast=True)
+@socketio.on('disconnect')
+def handle_disconnect():
+    room = session.get("room")
+    name = session.get("username")
+    leave_room(room)
+    if room in rooms:
+        rooms[room]["members"] -= 1
+        rooms[room]['ready'].pop(name)
+        emit("pcount", rooms[room]['members'], to=room)
+        if rooms[room]["members"] <= 0:
+            del rooms[room]
+        send(f"{name} покинул(а) чат", to=room)
 
 
 @app.route('/single', methods=['GET', 'POST'])
 def theme_selector():
-    with open("questions.json", 'r', encoding='UTF-8') as f:
-        questions: dict = json.load(f)['questions']
     if request.method == 'POST':
-        tmp = []
-        for _ in range(20):
-            print(request.form.to_dict())
-            while (i := random.choice(
-                       questions[request.form.to_dict()['themes']])) in tmp:
-                pass
-            tmp.append(i)
-        session['questions_list'] = tmp.copy()
+        session['questions_list'] = generate_qs(request.form.to_dict()['themes'])
         session['right_count'] = 0
         return redirect(f'/victorina/{request.form.to_dict()['themes']}/0')
     elif request.method == 'GET':
         return render_template("quiz.html",
                                title='Home',
-                               themes=questions)
+                               themes=get_themes())
 
 
 @app.route('/victorina/<theme>/<q_number>', methods=['GET', 'POST'])
 def question_prompt(theme, q_number):
-    if int(q_number) == 20:
+    if int(q_number) == 20: # залупа с рейтингом, она потом
         #update rating in users_data.db
         rating = session["right_count"]
         connection = sqlite3.connect('users_data.db')
@@ -74,9 +148,30 @@ def question_prompt(theme, q_number):
                                variants=enumerate(vopros['answers']))
 
 
-@app.route('/coop')
-def coop():
-    return render_template('coop.html', title="Командная игра")
+@app.route('/coop', methods=['POST', 'GET'])
+def createroom():
+    if request.method == "POST":
+        # session['name'] = request.form.get("name_room")
+        code = request.form.get("code")
+        join = request.form.get("join", False)
+        create = request.form.get("create", False)
+        if join != False and not code:
+            return render_template("joinroom.html", error="Please enter a room code.", code=code)
+        room = code
+        if create != False:
+            room = generate_unique_code(4)
+            rooms[room] = {"members": 0, 'result': {}, 'themes': get_themes(), 'ready': {}}
+        elif code not in rooms:
+            return render_template("joinroom.html", error="Room does not exist.", code=code)
+        session["room"] = room
+        return redirect("/room")
+    return render_template("joinroom.html", rooms=rooms)
+
+
+@app.route("/room")
+def room():
+    return render_template('room.html', code=session.get('room'))
+
 
 @app.route('/rating')
 def rating():
@@ -84,7 +179,6 @@ def rating():
     cursor = connection.cursor()
     cursor.execute("SELECT * FROM users")
     ids = [(row[0], row[2]) for row in cursor]
-    
     ids = sorted(ids, reverse=True, key=lambda x: x[1])
     session['users_rating'] = ids.copy()
     return render_template("rating.html", rows=ids)
@@ -113,7 +207,6 @@ def authorize():
         password = request.form['password']
         password_and_username = password + username
         crypto_password = sha256(password_and_username.encode('utf-8')).hexdigest()
-        
         query = "SELECT * FROM users WHERE name = ?"
         c.execute(query, (username,))
         usr_psw = c.fetchall()
@@ -186,4 +279,4 @@ def registration():
 
 if __name__ == '__main__':
     # app.run(debug=True)
-    socketio.run(app, host="127.0.0.1", allow_unsafe_werkzeug=True)
+    socketio.run(app, host="127.0.0.1", allow_unsafe_werkzeug=True, debug=True)

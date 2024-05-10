@@ -5,10 +5,17 @@ from hashlib import sha256
 from flask import Flask, render_template, url_for
 from flask import request, flash, redirect, session
 from flask_socketio import SocketIO, send, emit, join_room, leave_room
+from flask_socketio import SocketIO, send, emit, join_room, leave_room
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '21d6t3yfuyhrewoi1en3kqw'
 socketio = SocketIO(app, cors_allowed_origins='*')
+
+
+@socketio.on('message')
+def handle_message(message):
+    print("Received message: " + message)
+    send(message, broadcast=True)
 
 
 @socketio.on('message')
@@ -31,7 +38,7 @@ def theme_selector():
             tmp.append(i)
         session['questions_list'] = tmp.copy()
         session['right_count'] = 0
-        return redirect(f'/victorina/{request.form.to_dict()["themes"]}/0')
+        return redirect(f'/victorina/{request.form.to_dict()['themes']}/0')
     elif request.method == 'GET':
         return render_template("quiz.html",
                                title='Home',

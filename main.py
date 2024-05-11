@@ -41,7 +41,7 @@ def get_themes():
     return list(questions.keys())
 
 
-@socketio.on('connect')
+@socketio.on('connect', namespace='/room')
 def handle_connect(_):
     name = session['username']
     room = session.get('room')
@@ -59,7 +59,7 @@ def handle_connect(_):
     emit("themes", rooms[room]["themes"])
 
 
-@socketio.on('start')
+@socketio.on('start', namespace='/room')
 def handle_start(theme):
     room = session["room"]
     questions = generate_qs(theme)
@@ -67,7 +67,7 @@ def handle_start(theme):
     emit("question", rooms[room]['questions'][0], to=room)
 
 
-@socketio.on('answer')
+@socketio.on('answer', namespace='/room')
 def handle_answer(answer):
     room = rooms[session["room"]]
     name = session["username"]
@@ -86,14 +86,14 @@ def handle_answer(answer):
         emit("question", room['questions'][session['coop_progress']])
 
 
-@socketio.on('message')
+@socketio.on('message', namespace='/room')
 def handle_chat_message(message):
     result = session['username'] + " : " + message
     print("Received message: " + result)
     send(result, to=session["room"])
 
 
-@socketio.on('disconnect')
+@socketio.on('disconnect', namespace='/room')
 def handle_disconnect():
     room = session.get("room")
     name = session.get("username")
@@ -107,45 +107,45 @@ def handle_disconnect():
         send(f"{name} покинул(а) чат", to=room)
 
 
-@app.route('/single', methods=['GET', 'POST'])
-def theme_selector():
-    if request.method == 'POST':
-        session['questions_list'] = generate_qs(request.form.to_dict()['themes'])
-        session['right_count'] = 0
-        return redirect(f'/victorina/{request.form.to_dict()['themes']}/0')
-    elif request.method == 'GET':
-        return render_template("quiz.html",
-                               title='Home',
-                               themes=get_themes())
+@socketio.on('connect', namespace='/single')
+def handle_single_connect(_):
+    session['progress'] = 0
+    session['correct'] = 0
+    emit("themes", get_themes())
 
 
-@app.route('/victorina/<theme>/<q_number>', methods=['GET', 'POST'])
-def question_prompt(theme, q_number):
-    if int(q_number) == 20: # залупа с рейтингом, она потом
-        #update rating in users_data.db
-        rating = session["right_count"]
+@socketio.on('start', namespace='/single')
+def handle_single_start(theme):
+    questions = generate_qs(theme)
+    session['questions'] = questions
+    emit("question", session['questions'][0])
+
+
+@socketio.on('answer', namespace='/single')
+def handle_single_answer(answer):
+    name = session["username"]
+    if answer == 'corr':
+        session['correct'] += 1
+    session['progress'] += 1
+    if session['progress'] >= len(session['questions']):
+        emit("end", {name: session['correct']})
+        rating = session["correct"]
         connection = sqlite3.connect('users_data.db')
         cursor = connection.cursor()
         query = "SELECT rating FROM users WHERE name = ?"
         cursor.execute(query, (session['username'],))
         usr_psw = cursor.fetchall()
-
-        cursor.execute('UPDATE users SET rating = ? WHERE name = ?', (rating + usr_psw[0][0], session['username']))
+        cursor.execute('UPDATE users SET rating = ? WHERE name = ?',
+                       (rating + usr_psw[0][0], session['username']))
         connection.commit()
         connection.close()
+    else:
+        emit("question", session['questions'][session['progress']])
 
-        return f'правильных ответов {rating}'
-    vopros = session['questions_list'][int(q_number)]
-    if request.method == 'POST':
-        if int(request.form.to_dict()['answers']) == vopros['correct']:
-            session['right_count'] += 1
-            return redirect(f'/victorina/{theme}/{int(q_number) + 1}')
-        else:
-            return redirect(f'/victorina/{theme}/{int(q_number) + 1}')
-    elif request.method == 'GET':
-        return render_template("question.html",
-                               question=vopros['question'],
-                               variants=enumerate(vopros['answers']))
+
+@app.route("/single")
+def single():
+    return render_template('single.html', name=session.get('username'))
 
 
 @app.route('/coop', methods=['POST', 'GET'])
@@ -155,26 +155,33 @@ def createroom():
         code = request.form.get("code")
         join = request.form.get("join", False)
         create = request.form.get("create", False)
-        if join != False and not code:
-            return render_template("joinroom.html", error="Please enter a room code.", code=code)
+        if join is not False and not code:
+            return render_template("joinroom.html",
+                                   error="Please enter a room code.",
+                                   code=code)
         room = code
-        if create != False:
+        if create is not False:
             room = generate_unique_code(4)
-            rooms[room] = {"members": 0, 'result': {}, 'themes': get_themes(), 'ready': {}}
+            rooms[room] = {"members": 0,
+                           'result': {},
+                           'themes': get_themes(),
+                           'ready': {}}
         elif code not in rooms:
-            return render_template("joinroom.html", error="Room does not exist.", code=code)
+            return render_template("joinroom.html",
+                                   error="Room does not exist.",
+                                   code=code)
         session["room"] = room
         return redirect("/room")
     return render_template("joinroom.html", rooms=rooms)
 
 
 @app.route("/room")
-def room():
+def show_room():
     return render_template('room.html', code=session.get('room'))
 
 
 @app.route('/rating')
-def rating():
+def show_rating():
     connection = sqlite3.connect('users_data.db')
     cursor = connection.cursor()
     cursor.execute("SELECT * FROM users")
@@ -205,8 +212,8 @@ def authorize():
         # )""")
         username = request.form['username']
         password = request.form['password']
-        password_and_username = password + username
-        crypto_password = sha256(password_and_username.encode('utf-8')).hexdigest()
+        p_and_u = password + username
+        crypto_password = sha256(p_and_u.encode('utf-8')).hexdigest()
         query = "SELECT * FROM users WHERE name = ?"
         c.execute(query, (username,))
         usr_psw = c.fetchall()
@@ -249,15 +256,13 @@ def registration():
             error = True
             flash('введите пароль')
 
-        #mail + test of loyalty
+        # mail + test of loyalty
         mail = request.form['mail']
-        
         if '@' not in mail:
             correct_mail = False
         rating = 0
-        password_and_username = password + username
-        crypto_password = sha256(password_and_username.encode('utf-8')).hexdigest()
-        
+        p_and_u = password + username
+        crypto_password = sha256(p_and_u.encode('utf-8')).hexdigest()
         query = "SELECT * FROM users WHERE name = ?"
         c.execute(query, (username,))
         finded = c.fetchall()

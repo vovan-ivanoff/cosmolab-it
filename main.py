@@ -41,6 +41,20 @@ def get_themes():
     return list(questions.keys())
 
 
+def add_rating_db(rating: dict):
+    connection = sqlite3.connect('users_data.db')
+    cursor = connection.cursor()
+    sel_query = "SELECT rating FROM users WHERE name = ?"
+    upd_query = 'UPDATE users SET rating = ? WHERE name = ?'
+    for user in rating:
+        cursor.execute(sel_query, (user))
+        usr_psw = cursor.fetchall()
+        cursor.execute(upd_query, (rating[user] + usr_psw[0][0],
+                                   user))
+    connection.commit()
+    connection.close()
+
+
 @socketio.on('connect', namespace='/room')
 def handle_connect(_):
     name = session['username']
@@ -82,6 +96,7 @@ def handle_answer(answer):
             flag = flag and room['ready'][n]
         if flag:
             emit("end", room["result"], to=session['room'])
+            add_rating_db(room["result"])
     else:
         emit("question", room['questions'][session['coop_progress']])
 
@@ -129,16 +144,7 @@ def handle_single_answer(answer):
     session['progress'] += 1
     if session['progress'] >= len(session['questions']):
         emit("end", {name: session['correct']})
-        rating = session["correct"]
-        connection = sqlite3.connect('users_data.db')
-        cursor = connection.cursor()
-        query = "SELECT rating FROM users WHERE name = ?"
-        cursor.execute(query, (session['username'],))
-        usr_psw = cursor.fetchall()
-        cursor.execute('UPDATE users SET rating = ? WHERE name = ?',
-                       (rating + usr_psw[0][0], session['username']))
-        connection.commit()
-        connection.close()
+        add_rating_db({name: session['correct']})
     else:
         emit("question", session['questions'][session['progress']])
 

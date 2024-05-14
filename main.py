@@ -311,10 +311,18 @@ def get_zip():
             json_data[cur_que['name']][i]["answers"] = [request.form['cor' + str(i)]]
             for j in range(3):
                 json_data[cur_que['name']][i]["answers"].append(request.form[str(i) + '/' + str(j)])
-            json_data[cur_que['name']][i]['correct'] = 1
+            json_data[cur_que['name']][i]['correct'] = 0
             json_data[cur_que['name']][i]['time'] = 30
 
         print(json_data)
+        # перемешиваем варианты ответов
+        for i in json_data[cur_que['name']]:
+            shift = random.randint(0, 4)
+            i['correct'] = shift % 4
+            temp_ans = [0] * 4
+            for j in range(len(i['answers'])):
+                temp_ans[(j + shift) % 4] = i['answers'][j]
+            i['answers'] = temp_ans
         json_loaded = json.dumps(json_data, ensure_ascii=False, indent=2)
         with open('example.json', 'w', encoding="UTF-8") as f:
             f.write(json_loaded)

@@ -4,11 +4,14 @@ import random
 import sqlite3
 from hashlib import sha256
 from flask import Flask, render_template, url_for
-from flask import request, flash, redirect, session
+from flask import request, flash, redirect, session, send_from_directory
 from flask_socketio import SocketIO, send, emit, join_room, leave_room
+import zipfile
+import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '21d6t3yfuyhrewoi1en3kqw'
+app.config['UPLOAD_FOLDER'] = ''
 socketio = SocketIO(app, cors_allowed_origins='*')
 rooms = {}
 cur_que = {}
@@ -301,6 +304,7 @@ def make_quiz():
         cur_que['amount'] = int(request.form['amount'])
     return render_template('make_quiz.html', cur_que=cur_que)
 
+
 @app.route('/get_zip', methods=['POST', 'GET'])
 def get_zip():
     if request.method == 'POST':
@@ -314,7 +318,6 @@ def get_zip():
             json_data[cur_que['name']][i]['correct'] = 0
             json_data[cur_que['name']][i]['time'] = 30
 
-        print(json_data)
         # перемешиваем варианты ответов
         for i in json_data[cur_que['name']]:
             shift = random.randint(0, 4)
@@ -324,9 +327,23 @@ def get_zip():
                 temp_ans[(j + shift) % 4] = i['answers'][j]
             i['answers'] = temp_ans
         json_loaded = json.dumps(json_data, ensure_ascii=False, indent=2)
-        with open('example.json', 'w', encoding="UTF-8") as f:
+        with open('temp.json', 'w', encoding="UTF-8") as f:
             f.write(json_loaded)
+        # в зип
+        with zipfile.ZipFile('questions.que', "w", compression=zipfile.ZIP_DEFLATED) as ziphelper:
+            ziphelper.write('temp.json')
+
     return render_template('get_zip.html')
+
+
+@app.route('/questions.que')
+def download_archive():
+    return send_from_directory(app.config['UPLOAD_FOLDER'], 'questions.que', as_attachment=True)
+
+@app.route('/add_quiz', methods=['POST', 'GET'])
+def add_quiz():
+    if request.method == 'POST':
+        pass
 
 if __name__ == '__main__':
     # app.run(debug=True)

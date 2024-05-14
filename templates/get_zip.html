@@ -5,6 +5,11 @@
     <title>Загрузить свою викторину</title>
 </head>
 <body>
-если хотите добавить свои вопросы на сайт то поместить архив сюда ->
+Скачать архив -> <a href="/questions.que" download>скачать</a><br>
+Если хотите добавить свои вопросы на сайт то добавьте скачанный архив ↓
+<form action="/add_quiz" enctype="multipart/form-data" method="post">
+   <p><input type="file" name="f">
+   <input type="submit" value="Отправить"></p>
+  </form>
 </body>
 </html>

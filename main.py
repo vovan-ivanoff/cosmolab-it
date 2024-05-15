@@ -92,6 +92,68 @@ def quiz():
                            title="Выбор режима",
                            name=session['username'])
 
+def add_to_json(theme, question, answers_question, right):
+    json_data = {
+        "question": question,
+        "answers": answers_question,
+        "correct": right - 1,
+        "time": 30
+    }
+    data = json.load(open("questions.json"))
+    data["questions"][theme].append(json_data)
+    with open("questions.json", "w") as file:
+        json.dump(data, file, indent=2, ensure_ascii=False)
+
+
+
+@app.route('/addthemes', methods=['GET', 'POST'])
+def add_theme():
+    if request.method == 'POST':
+        error = False
+        theme = request.form['theme']
+        if theme == "":
+            error = True
+            flash("Введите тему")
+        with open("questions.json", 'r', encoding='UTF-8') as f:
+            questions: dict = json.load(f)['questions']
+        ids = questions.keys()
+        if theme not in ids:
+            error = True
+            flash("Введите тему из списка")
+        question = request.form['question']
+        if question == "":
+            error = True
+            flash("Введите вопрос")
+        first_question = request.form['firstquestions']
+        if first_question == "":
+            error = True
+            flash("Введите 1 вариант ответа")
+        second_question = request.form['secondquestions']
+        if second_question == "":
+            error = True
+            flash("Введите 2 вариант ответа")
+        third_question = request.form['thirdquestions']
+        if third_question == "":
+            error = True
+            flash("Введите 3 вариант ответа")
+        four_question = request.form['fourquestions']
+        if four_question == "":
+            error = True
+            flash("Введите 4 вариант ответа")
+        right = request.form['right']
+        if right == "" or right.isdigit() is False:
+            error = True
+            flash("Введите номер правильного ответа")
+        # right = int(right)
+        if error is False:
+            right = int(right)
+            answers_question = [first_question, second_question, third_question, four_question]
+            add_to_json(theme, question, answers_question, right)
+            flash("Вопрос добавлен")
+
+    return render_template('addcontent.html', title="Добавление контента")
+    
+
 
 @app.route('/')
 @app.route('/authorization', methods=['POST', 'GET'])

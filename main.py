@@ -1,37 +1,62 @@
 import json
 import random
 import sqlite3
-from flask import Flask, render_template, url_for, request, flash, redirect, session
 from hashlib import sha256
+from flask import Flask, render_template, url_for
+from flask import request, flash, redirect, session
+import datetime
 
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '21d6t3yfuyhrewoi1en3kqw'
 
 
-
-@app.route('/theme', methods=['GET', 'POST'])
+@app.route('/single', methods=['GET', 'POST'])
 def theme_selector():
     with open("questions.json", 'r', encoding='UTF-8') as f:
         questions: dict = json.load(f)['questions']
     if request.method == 'POST':
-        session['questions_list'] = [random.choice(questions[
-                                     request.form.to_dict()['themes']])
-                                     for _ in range(20)]
+        tmp = []
+        for _ in range(20):
+            print(request.form.to_dict())
+            while (i := random.choice(
+                       questions[request.form.to_dict()['themes']])) in tmp:
+                pass
+            tmp.append(i)
+        session['questions_list'] = tmp.copy()
         session['right_count'] = 0
-        return redirect(f'/victorina/{request.form.to_dict()['themes']}/0')
+        return redirect(f'/victorina/{request.form.to_dict()["themes"]}/0')
     elif request.method == 'GET':
         return render_template("quiz.html",
                                title='Home',
                                themes=questions)
 
 
+
+
+
 @app.route('/victorina/<theme>/<q_number>', methods=['GET', 'POST'])
 def question_prompt(theme, q_number):
+    
     if int(q_number) == 20:
-        return f'правильных {session['right_count']}'
+        #update rating in users_data.db
+        rating = session["right_count"]
+        connection = sqlite3.connect('users_data.db')
+        cursor = connection.cursor()
+        query = "SELECT rating FROM users WHERE name = ?"
+        cursor.execute(query, (session['username'],))
+        usr_psw = cursor.fetchall()
+
+        cursor.execute('UPDATE users SET rating = ? WHERE name = ?', (rating + usr_psw[0][0], session['username']))
+        connection.commit()
+        connection.close()
+
+        return f'правильных ответов {rating}'
     vopros = session['questions_list'][int(q_number)]
+ 
     if request.method == 'POST':
+        
+    
         if int(request.form.to_dict()['answers']) == vopros['correct']:
             session['right_count'] += 1
             return redirect(f'/victorina/{theme}/{int(q_number) + 1}')
@@ -39,23 +64,95 @@ def question_prompt(theme, q_number):
             return redirect(f'/victorina/{theme}/{int(q_number) + 1}')
     elif request.method == 'GET':
         return render_template("question.html",
-                               question=vopros['question'],
-                               variants=enumerate(vopros['answers']))
-
-      
-@app.route('/single')
-def single():
-    return render_template('single.html', title="Одиночная игра")
+                                theme=theme,
+                                q_number=int(q_number)+1,
+                                question=vopros['question'],
+                                variants=enumerate(vopros['answers']))
 
 
 @app.route('/coop')
 def coop():
     return render_template('coop.html', title="Командная игра")
 
+@app.route('/rating')
+def rating():
+    connection = sqlite3.connect('users_data.db')
+    cursor = connection.cursor()
+    cursor.execute("SELECT * FROM users")
+    ids = [(row[0], row[2]) for row in cursor]
+    
+    ids = sorted(ids, reverse=True, key=lambda x: x[1])
+    session['users_rating'] = ids.copy()
+    return render_template("rating.html", rows=ids)
 
-@app.route('/quiz')
+
+@app.route('/mode')
 def quiz():
-    return render_template('quiz.html', title="Выбор режима", name=session['username'])
+    return render_template('mode.html',
+                           title="Выбор режима",
+                           name=session['username'])
+
+def add_to_json(theme, question, answers_question, right):
+    json_data = {
+        "question": question,
+        "answers": answers_question,
+        "correct": right - 1,
+        "time": 30
+    }
+    data = json.load(open("questions.json"))
+    data["questions"][theme].append(json_data)
+    with open("questions.json", "w") as file:
+        json.dump(data, file, indent=2, ensure_ascii=False)
+
+
+
+@app.route('/addthemes', methods=['GET', 'POST'])
+def add_theme():
+    if request.method == 'POST':
+        error = False
+        theme = request.form['theme']
+        if theme == "":
+            error = True
+            flash("Введите тему")
+        with open("questions.json", 'r', encoding='UTF-8') as f:
+            questions: dict = json.load(f)['questions']
+        ids = questions.keys()
+        if theme not in ids:
+            error = True
+            flash("Введите тему из списка")
+        question = request.form['question']
+        if question == "":
+            error = True
+            flash("Введите вопрос")
+        first_question = request.form['firstquestions']
+        if first_question == "":
+            error = True
+            flash("Введите 1 вариант ответа")
+        second_question = request.form['secondquestions']
+        if second_question == "":
+            error = True
+            flash("Введите 2 вариант ответа")
+        third_question = request.form['thirdquestions']
+        if third_question == "":
+            error = True
+            flash("Введите 3 вариант ответа")
+        four_question = request.form['fourquestions']
+        if four_question == "":
+            error = True
+            flash("Введите 4 вариант ответа")
+        right = request.form['right']
+        if right == "" or right.isdigit() is False:
+            error = True
+            flash("Введите номер правильного ответа")
+        # right = int(right)
+        if error is False:
+            right = int(right)
+            answers_question = [first_question, second_question, third_question, four_question]
+            add_to_json(theme, question, answers_question, right)
+            flash("Вопрос добавлен")
+
+    return render_template('addcontent.html', title="Добавление контента")
+    
 
 
 @app.route('/')
@@ -72,7 +169,9 @@ def authorize():
         # )""")
         username = request.form['username']
         password = request.form['password']
-        crypto_password = sha256(password.encode('utf-8')).hexdigest()
+        password_and_username = password + username
+        crypto_password = sha256(password_and_username.encode('utf-8')).hexdigest()
+        
         query = "SELECT * FROM users WHERE name = ?"
         c.execute(query, (username,))
         usr_psw = c.fetchall()
@@ -104,21 +203,40 @@ def registration():
         # name text,
         # password text
         # )""")
+        correct_mail = True
+        error = False
         username = request.form['username']
+        if username == "":
+            error = True
+            flash('введите никнейм')
         password = request.form['password']
-        crypto_password = sha256(password.encode('utf-8')).hexdigest()
+        if password == "":
+            error = True
+            flash('введите пароль')
+
+        #mail + test of loyalty
+        mail = request.form['mail']
+        
+        if '@' not in mail:
+            correct_mail = False
+        rating = 0
+        password_and_username = password + username
+        crypto_password = sha256(password_and_username.encode('utf-8')).hexdigest()
+        
         query = "SELECT * FROM users WHERE name = ?"
         c.execute(query, (username,))
         finded = c.fetchall()
         print(finded)
-        if len(finded) == 0:
-            query = "INSERT INTO users VALUES (?, ?)"
-            c.execute(query, (username, crypto_password))
+        if len(finded) == 0 and correct_mail is True and error is False:
+            query = "INSERT INTO users VALUES (?, ?, ?, ?)"
+            c.execute(query, (username, crypto_password, rating, mail))
             c.execute("SELECT * FROM users")
 
             flash('аккаунт создан')
             db.commit()
-        if len(finded) == 1:
+        elif correct_mail is False and len(finded) == 0:
+            flash('неверно указан адрес электронной почты')
+        if len(finded) == 1 and error is False:
             flash('такой аккаунт уже существует')
         db.close()
     return render_template('registration.html', title="Регистрация")

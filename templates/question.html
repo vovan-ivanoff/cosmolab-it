@@ -1,19 +1,99 @@
-<html>
-  <head>
-    {% if title %}
-    <title>{{title}} - microblog</title>
-    {% else %}
-    <title>microblog</title>
-    {% endif %}
-  </head>
-  <body>
-    <h1>СОЗРЕЛ ВОПРОС:</h1>
+<!DOCTYPE html>
+<html lang="en">
+    
+<head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <title>Ответьте на вопрос</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #fff;
+            padding: 20px;
+            text-align: center;
+            
+        }
+
+        .theme-button {
+            display: inline-block;
+            margin: 10px;
+            padding: 15px 30px;
+            font-size: 20px;
+            text-decoration: none;
+            color: #fff;
+            background-color: #dc931f;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+
+        .theme-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    
+    <iframe src="https://timertopia.wordpress.com/wp-content/uploads/2017/04/30-seconds.gif" width="500" height="200" frameBorder="0" class="giphy-embed" allowFullScreen></iframe><p><a href="https://timertopia.wordpress.com/wp-content/uploads/2017/04/30-seconds.gif"></a></p>
+    
+</head>
+<body>
+    <h1>Ответьте на вопрос</h1>
     <h2>{{question}}</h2>
+    
     <form method="post">
+        <meta http-equiv="refresh" content="30;/victorina/{{theme}}/{{q_number}}">
         {% for variant in variants %}
-        <input type="radio" name="answers" id="{{variant[0]}}" value="{{variant[0]}}"> {{variant[1]}} </input><br>
+        
+        <button class="theme-button" type="radio" name="answers" id="{{variant[0]}}" value="{{variant[0]}}">{{variant[1]}}</button>
+        <!-- <input type="radio" name="answers" id="{{variant[0]}}" value="{{variant[0]}}"> {{variant[1]}} </input><br> -->
+        
+        
         {% endfor %}
-        <input type="submit" value="SelectTheme"></input>
+        {% if q_number - 2 >= 0 %}
+        <button align="center"><a href="/victorina/{{theme}}/{{q_number-2}}">Назад</button></a>
+        {% else %}
+        <button align="center"><a href="/single?">Назад</button></a><br>
+        {% endif %}
+        
+       
+        
+           
+        <!--#else-->
+            <!-- <button align="center"><a href="/single?">Назад</button></a><br> -->
+        
+        <!-- <input type="submit" value="Следующий вопрос"></input> -->
+        
     </form>
-  </body>
+    <!-- <script>
+    function sayHi() {
+        alert("HI")
+      }
+      
+    setTimeout(sayHi, 5000);
+    </script> -->
+    
+    
+</body>
 </html>
+
+
+ <!-- <html>
+//   <head>
+//     {% if title %}
+//     <title>{{title}} - microblog</title>
+//     {% else %}
+//     <title>microblog</title>
+//     {% endif %}
+//   </head>
+//   <body>
+//     <h1>СОЗРЕЛ ВОПРОС:</h1>
+//     <h2>{{question}}</h2>
+//     <form method="post">
+//         {% for variant in variants %}
+//         <input type="radio" name="answers" id="{{variant[0]}}" value="{{variant[0]}}"> {{variant[1]}} </input><br>
+//         {% endfor %}
+//         <button><a href="javascript:history.back()">Назад</button></a><br>
+//         <input type="submit" value="Следующий вопрос"></input>
+//     </form>
+//   </body>
+// </html> -->

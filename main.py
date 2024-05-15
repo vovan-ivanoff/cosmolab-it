@@ -7,7 +7,6 @@ from flask import Flask, render_template, url_for
 from flask import request, flash, redirect, session, send_from_directory
 from flask_socketio import SocketIO, send, emit, join_room, leave_room
 import zipfile
-import os
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '21d6t3yfuyhrewoi1en3kqw'
@@ -305,6 +304,29 @@ def make_quiz():
     return render_template('make_quiz.html', cur_que=cur_que)
 
 
+def add_new_que_to_bd():
+    db = sqlite3.connect('users_data.db')
+    c = db.cursor()
+    query = "INSERT INTO questions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    with open("uploaded_quiz/temp.json", 'r', encoding='UTF-8') as f:
+        questions: dict = json.load(f)
+        print(questions)
+        for i in questions.keys():
+            theme = i
+            for j in range(len(questions[i])):
+                que = questions[i][j]['question']
+                ans_1 = questions[i][j]['answers'][0]
+                ans_2 = questions[i][j]['answers'][1]
+                ans_3 = questions[i][j]['answers'][2]
+                ans_4 = questions[i][j]['answers'][3]
+                cor = questions[i][j]['correct']
+                time = questions[i][j]['time']
+                # print(theme, j, que, ans_1, ans_2, ans_3, ans_4, cor, time)
+                c.execute(query, (theme, j, que, ans_1, ans_2, ans_3, ans_4, int(cor), int(time)))
+                c.execute("SELECT * FROM questions")
+                db.commit()
+
+
 @app.route('/get_zip', methods=['POST', 'GET'])
 def get_zip():
     if request.method == 'POST':
@@ -340,10 +362,53 @@ def get_zip():
 def download_archive():
     return send_from_directory(app.config['UPLOAD_FOLDER'], 'questions.que', as_attachment=True)
 
+
 @app.route('/add_quiz', methods=['POST', 'GET'])
 def add_quiz():
     if request.method == 'POST':
-        pass
+        file = request.files['file']
+        with zipfile.ZipFile(file, 'r') as zip_ref:
+            # Извлечение всех файлов в указанную директорию
+            zip_ref.extractall('uploaded_quiz')
+        add_new_que_to_bd()
+    return render_template('add_quiz.html')
+
+
+# временная функция для создания дб по жсонке(потом удалить)
+def create_table():
+    db = sqlite3.connect('users_data.db')
+    c = db.cursor()
+    # c.execute("DROP TABLE questions")
+    # c.execute("""CREATE TABLE questions (
+    #     theme text,
+    #     number int,
+    #     question text,
+    #     answer_1 text,
+    #     answer_2 text,
+    #     answer_3 text,
+    #     answer_4 text,
+    #     correct int,
+    #     time int
+    #     )""")
+    query = "INSERT INTO questions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    with open("questions.json", 'r', encoding='UTF-8') as f:
+        questions: dict = json.load(f)
+        print(questions)
+        for i in questions['questions'].keys():
+            theme = i
+            for j in range(len(questions['questions'][i])):
+                que = questions['questions'][i][j]['question']
+                ans_1 = questions['questions'][i][j]['answers'][0]
+                ans_2 = questions['questions'][i][j]['answers'][1]
+                ans_3 = questions['questions'][i][j]['answers'][2]
+                ans_4 = questions['questions'][i][j]['answers'][3]
+                cor = questions['questions'][i][j]['correct']
+                time = questions['questions'][i][j]['time']
+                # print(theme, j, que, ans_1, ans_2, ans_3, ans_4, cor, time)
+                c.execute(query, (theme, j, que, ans_1, ans_2, ans_3, ans_4, int(cor), int(time)))
+                c.execute("SELECT * FROM questions")
+                db.commit()
+
 
 if __name__ == '__main__':
     # app.run(debug=True)

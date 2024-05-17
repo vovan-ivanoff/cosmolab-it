@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{title}}</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.js"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='scripts/timer.js') }}"></script>
+</head>
+<body>
+<h1> Комната {{code}} </h1>
+<p id="pcount"></p>
+<button id="startBtn">START</button>
+<script type="text/javascript" src="{{ url_for('static', filename='scripts/coop.js') }}"></script>
+<div id="messages">
+    <div>
+        <input type="text" id="message" placeholder="Message">
+        <button id="sendBtn">Send</button>
+    </div>
+</div>
+<div id="quiz">
+    <p id="vopros"></p>
+    <p id="countdown"></p>
+    <input type="radio" name="answers" value="0"><div id="ans0"></div></input><br>
+    <input type="radio" name="answers" value="1"><div id="ans1"></div></input><br>
+    <input type="radio" name="answers" value="2"><div id="ans2"></div></input><br>
+    <input type="radio" name="answers" value="3"><div id="ans3"></div></input><br>
+    <button id="ansBtn">Answer</button>
+</div>
+<div id="results"></div>
+<form action="/coop" >
+    <button> ВЫЙТИ </button>
+</form>
+</body>
+</html>

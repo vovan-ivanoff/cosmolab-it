@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Создание комнаты</title>
+</head>
+<body>
+<form method="post" class="buttons">
+  <h3>Вход или создание комнаты</h3>
+  <div class="join">
+
+    <input type="text" placeholder="Код комнаты" name="code" value="{{code}}" />
+    <button type="submit" name="join">Присоединиться</button>
+  </div>
+  <div class="create">
+    <button type="submit" name="create" class="create-btn">Создать</button>
+  </div>
+    {% if error %}
+  <ul>
+    <li>{{error}}</li>
+  </ul>
+  {% endif %}
+</form>
+</body>
+</html>

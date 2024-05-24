@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Создать викторину</title>
+</head>
+<h1>{{cur_que['name']}}</h1>
+<body>
+<form action="/get_zip" method="post">
+{% for i in range(cur_que['amount']) %}
+    <label> {{i + 1}}.Вопрос: </label>
+    <input type="text" name=ans{{i}} /><br>
+    <p>Варианты ответов:<br>
+    <input type="text" name=cor{{i}} /><label> - правильный ответ   </label><br>
+    {% for j in range(3) %}
+        <input type="text" name={{i}}/{{j}} /><br>
+    {% endfor %}
+    <br>
+{% endfor %}
+    <input type="submit" value="Скачать архив"/>
+</form>
+<form action="/create_quiz" >
+    <div>
+        <button type="submit">Назад</button>
+    </div>
+</form>
+</body>
+</html>

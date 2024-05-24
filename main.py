@@ -4,13 +4,16 @@ import random
 import sqlite3
 from hashlib import sha256
 from flask import Flask, render_template, url_for
-from flask import request, flash, redirect, session
+from flask import request, flash, redirect, session, send_from_directory
 from flask_socketio import SocketIO, send, emit, join_room, leave_room
+import zipfile
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '21d6t3yfuyhrewoi1en3kqw'
+app.config['UPLOAD_FOLDER'] = ''
 socketio = SocketIO(app, cors_allowed_origins='*')
 rooms = {}
+cur_que = {}
 
 
 def generate_unique_code(length):
@@ -29,7 +32,7 @@ def generate_qs(theme):
         questions: dict = json.load(f)['questions']
     for _ in range(20):
         while (i := random.choice(
-                   questions[theme])) in tmp:
+                questions[theme])) in tmp:
             pass
         tmp.append(i)
     return tmp.copy()
@@ -288,6 +291,125 @@ def registration():
     return render_template('registration.html', title="Регистрация")
 
 
+@app.route('/create_quiz', methods=['POST', 'GET'])
+def create_quiz():
+    return render_template('create_quiz.html')
+
+
+@app.route('/make_quiz', methods=['POST', 'GET'])
+def make_quiz():
+    if request.method == 'POST':
+        cur_que['name'] = request.form['name_quiz']
+        cur_que['amount'] = int(request.form['amount'])
+    return render_template('make_quiz.html', cur_que=cur_que)
+
+
+def add_new_que_to_bd():
+    db = sqlite3.connect('users_data.db')
+    c = db.cursor()
+    query = "INSERT INTO questions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    with open("uploaded_quiz/temp.json", 'r', encoding='UTF-8') as f:
+        questions: dict = json.load(f)
+        print(questions)
+        for i in questions.keys():
+            theme = i
+            for j in range(len(questions[i])):
+                que = questions[i][j]['question']
+                ans_1 = questions[i][j]['answers'][0]
+                ans_2 = questions[i][j]['answers'][1]
+                ans_3 = questions[i][j]['answers'][2]
+                ans_4 = questions[i][j]['answers'][3]
+                cor = questions[i][j]['correct']
+                time = questions[i][j]['time']
+                # print(theme, j, que, ans_1, ans_2, ans_3, ans_4, cor, time)
+                c.execute(query, (theme, j, que, ans_1, ans_2, ans_3, ans_4, int(cor), int(time)))
+                c.execute("SELECT * FROM questions")
+                db.commit()
+
+
+@app.route('/get_zip', methods=['POST', 'GET'])
+def get_zip():
+    if request.method == 'POST':
+        print(request.form)
+        json_data = {cur_que['name']: []}
+        for i in range(int(len(request.form) / 5)):
+            json_data[cur_que['name']].append({"question": request.form['ans' + str(i)]})
+            json_data[cur_que['name']][i]["answers"] = [request.form['cor' + str(i)]]
+            for j in range(3):
+                json_data[cur_que['name']][i]["answers"].append(request.form[str(i) + '/' + str(j)])
+            json_data[cur_que['name']][i]['correct'] = 0
+            json_data[cur_que['name']][i]['time'] = 30
+
+        # перемешиваем варианты ответов
+        for i in json_data[cur_que['name']]:
+            shift = random.randint(0, 4)
+            i['correct'] = shift % 4
+            temp_ans = [0] * 4
+            for j in range(len(i['answers'])):
+                temp_ans[(j + shift) % 4] = i['answers'][j]
+            i['answers'] = temp_ans
+        json_loaded = json.dumps(json_data, ensure_ascii=False, indent=2)
+        with open('temp.json', 'w', encoding="UTF-8") as f:
+            f.write(json_loaded)
+        # в зип
+        with zipfile.ZipFile('questions.que', "w", compression=zipfile.ZIP_DEFLATED) as ziphelper:
+            ziphelper.write('temp.json')
+
+    return render_template('get_zip.html')
+
+
+@app.route('/questions.que')
+def download_archive():
+    return send_from_directory(app.config['UPLOAD_FOLDER'], 'questions.que', as_attachment=True)
+
+
+@app.route('/add_quiz', methods=['POST', 'GET'])
+def add_quiz():
+    if request.method == 'POST':
+        file = request.files['file']
+        with zipfile.ZipFile(file, 'r') as zip_ref:
+            # Извлечение всех файлов в указанную директорию
+            zip_ref.extractall('uploaded_quiz')
+        add_new_que_to_bd()
+    return render_template('add_quiz.html')
+
+
+# временная функция для создания дб по жсонке(потом удалить)
+def create_table():
+    db = sqlite3.connect('users_data.db')
+    c = db.cursor()
+    # c.execute("DROP TABLE questions")
+    # c.execute("""CREATE TABLE questions (
+    #     theme text,
+    #     number int,
+    #     question text,
+    #     answer_1 text,
+    #     answer_2 text,
+    #     answer_3 text,
+    #     answer_4 text,
+    #     correct int,
+    #     time int
+    #     )""")
+    query = "INSERT INTO questions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    with open("questions.json", 'r', encoding='UTF-8') as f:
+        questions: dict = json.load(f)
+        print(questions)
+        for i in questions['questions'].keys():
+            theme = i
+            for j in range(len(questions['questions'][i])):
+                que = questions['questions'][i][j]['question']
+                ans_1 = questions['questions'][i][j]['answers'][0]
+                ans_2 = questions['questions'][i][j]['answers'][1]
+                ans_3 = questions['questions'][i][j]['answers'][2]
+                ans_4 = questions['questions'][i][j]['answers'][3]
+                cor = questions['questions'][i][j]['correct']
+                time = questions['questions'][i][j]['time']
+                # print(theme, j, que, ans_1, ans_2, ans_3, ans_4, cor, time)
+                c.execute(query, (theme, j, que, ans_1, ans_2, ans_3, ans_4, int(cor), int(time)))
+                c.execute("SELECT * FROM questions")
+                db.commit()
+
+
 if __name__ == '__main__':
     # app.run(debug=True)
-    socketio.run(app, host="127.0.0.1", allow_unsafe_werkzeug=True, debug=True)
+    socketio.run(app, host="localhost", allow_unsafe_werkzeug=True, debug=True)

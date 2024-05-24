@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Добавить викторину</title>
+</head>
+<body>
+<form action="/make_quiz" method="post">
+    <label>Название викторины: </label>
+    <input type="text" name="name_quiz"/><br>
+    <label>Количество вопросов: </label>
+    <input type="number" step="1" min="1" max="100" value="1" name="amount"/><br>
+    <input type="submit" value="Далее"/>
+</form>
+<form action="/mode" >
+    <div>
+        <button type="submit">Назад</button>
+    </div>
+</form>
+</body>
+</html>

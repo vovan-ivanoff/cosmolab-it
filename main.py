@@ -27,21 +27,40 @@ def generate_unique_code(length):
 
 
 def generate_qs(theme):
+    db = sqlite3.connect('users_data.db')
+    c = db.cursor()
+    sel_query = 'SELECT * FROM questions WHERE theme=?;'
+    c.execute(sel_query, (theme,))
+    qs = c.fetchall()
     tmp = []
-    with open("questions.json", 'r', encoding='UTF-8') as f:
-        questions: dict = json.load(f)['questions']
+    used_ids = []
     for _ in range(20):
-        while (i := random.choice(
-                questions[theme])) in tmp:
+        while (i := random.choice(qs))[1] in used_ids:
             pass
         tmp.append(i)
+        used_ids.append(i[1])
+    tmp = [{'question': i[2],
+            'answers': [i[3], i[4], i[5], i[6]],
+            'correct': i[7],
+            'time': i[8]} for i in tmp]
     return tmp.copy()
 
 
-def get_themes():
+def get_themes_old():
     with open("questions.json", 'r', encoding='UTF-8') as f:
         questions: dict = json.load(f)['questions']
     return list(questions.keys())
+
+
+def get_themes():
+    db = sqlite3.connect('users_data.db')
+    c = db.cursor()
+    sel_query = 'SELECT theme FROM questions;'
+    c.execute(sel_query)
+    th = set(c.fetchall())
+    th = [i[0] for i in th]
+    return th
+
 
 
 def add_rating_db(rating: dict):
@@ -50,7 +69,7 @@ def add_rating_db(rating: dict):
     sel_query = "SELECT rating FROM users WHERE name = ?"
     upd_query = 'UPDATE users SET rating = ? WHERE name = ?'
     for user in rating:
-        cursor.execute(sel_query, (user))
+        cursor.execute(sel_query, (user,))
         usr_psw = cursor.fetchall()
         cursor.execute(upd_query, (rating[user] + usr_psw[0][0],
                                    user))

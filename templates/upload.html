@@ -25,12 +25,8 @@
 					>
 					<div class="header-flex">
 						<a href="/rating" class="rating">Рейтинг</a>
-						<a href="/authorization" class="enter"
-							><div class="authOnButton">
-								<div class="topAuthOn">name</div>
-								<div class="bottomAuthOn">123</div>
-							</div></a
-						>
+						<a href="/authorization" class="enter"><img src="static/img/ava.png" alt="1" width=30 height=30><div class="authOnButton"><div class="topAuthOn">{{name}}</div><div class="bottomAuthOn">счет: {{score}}</div></div></a>
+
 					</div>
 				</div>
 			</section>
@@ -40,8 +36,8 @@
 				<div class="block-party">
 					<a href="/mode"><img class="arrowback" src="static/img/Arrow.svg" alt="" /></a>
 					<div class="create-room-3">
-						<div class="text-upload">Вопросы добавлены</div>
-						<img src="static/img/teenyicons_tick-circle-outline.svg" alt="" />
+						<div class="text-upload">{{msg}}</div>
+
 					</div>
 				</div>
 			</section>

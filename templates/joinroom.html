@@ -1,25 +1,81 @@
 <!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>Создание комнаты</title>
-</head>
-<body>
-<form method="post" class="buttons">
-  <h3>Вход или создание комнаты</h3>
-  <div class="join">
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="static/style.css" />
 
-    <input type="text" placeholder="Код комнаты" name="code" value="{{code}}" />
-    <button type="submit" name="join">Присоединиться</button>
-  </div>
-  <div class="create">
-    <button type="submit" name="create" class="create-btn">Создать</button>
-  </div>
-    {% if error %}
-  <ul>
-    <li>{{error}}</li>
-  </ul>
-  {% endif %}
-</form>
-</body>
+    <title>Создание комнаты</title>
+  </head>
+
+  <body>
+    <header class="header">
+      <section class="container">
+        <div class="header-row">
+          <a href="/mode" class="logo">
+            <div class="imglogo">
+              <img src="static/img/Vector1.png" alt="1" />
+            </div>
+            <div class="text-logo">
+              Онлайн<span class="bluelogo">Викторины</span>
+            </div>
+          </a>
+          <div class="header-flex">
+            <a href="/rating" class="rating">Рейтинг</a>
+            <a href="/authorization" class="enter">
+              <div class="authOnButton">
+                <div class="topAuthOn">{{name}}</div>
+                <div class="bottomAuthOn">{{score}}</div>
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+    </header>
+    <main>
+      <section class="container">
+        <div class="block-party">
+          <div class="arrow-svg">
+            <img
+              src="static/img/Arrow.svg"
+              alt="Arrow"
+              onclick="location.href='/mode'"
+            />
+          </div>
+          <form method="post" class="buttons">
+            <div class="create-room">
+              <img src="static/img/Star.svg" alt="" class="star" />
+              <h1 class="title-game">Игра в команде</h1>
+              <img src="static/img/Star.svg" alt="" class="star" />
+            </div>
+            <button type="submit" name="create" class="create-room_two">
+              Создать комнату
+            </button>
+            <div class="room-flex_cart">
+              <input
+                class="num-room"
+                placeholder="Код комнаты"
+                name="code"
+                value="{{code}}"
+              />
+              <button class="connect" type="submit" name="join">
+                Присоединиться
+              </button>
+            </div>
+            {% if error %}
+            <ul>
+              <li>{{error}}</li>
+            </ul>
+            {% endif %}
+          </form>
+        </div>
+      </section>
+    </main>
+  </body>
 </html>

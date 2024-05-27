@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
+			rel="stylesheet"
+		/>
+		<link rel="stylesheet" href="static/style.css" />
+
+		<title>Document</title>
+	</head>
+	<body>
+		<header class="header">
+			<section class="container">
+				<div class="header-row">
+					<a href="/mode" class="logo"
+						><div class="imglogo"><img src="static/img/Vector1.png" alt="1" /></div>
+						<div class="text-logo">
+							Онлайн<span class="bluelogo">Викторины</span>
+						</div></a
+					>
+					<div class="header-flex">
+						<a href="/rating" class="rating">Рейтинг</a>
+						<a href="/authorization" class="enter"><img src="static/img/ava.png" alt="1" width=30 height=30><div class="authOnButton"><div class="topAuthOn">{{name}}</div><div class="bottomAuthOn">счет: {{score}}</div></div></a>
+
+					</div>
+				</div>
+			</section>
+		</header>
+		<main>
+			<section class="container">
+				<form action="/make_quiz" method="post">
+					<div class="block-party">
+						<a href="/mode"><img class="arrowback" src="static/img/Arrow.svg" alt="" /></a>
+
+						<div class="create-room-1">
+							<img src="static/img/Star2.svg" alt="" class="star" />
+							<h1 class="title-game">Создание викторины</h1>
+							<img src="static/img/Star2.svg" alt="" class="star" />
+						</div>
+						<div class="div-flex">
+							<h1 class="victoranswer">Название викторины</h1>
+							<input class="inpvict" type="text" name="name_quiz" />
+						</div>
+						<div class="div-flex">
+							<h1 class="victoranswer">Количество вопросов</h1>
+							<input class="inpvict" type="number" step="1" min="1" max="100" value="1" name="amount"/>
+						</div>
+						<button class="buttonOnreg" type="submit" >Далее</button>
+					</div>
+				</form>
+			</section>
+		</main>
+	</body>
+</html>

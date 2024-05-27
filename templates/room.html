@@ -1,35 +1,94 @@
 <!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <title>{{title}}</title>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://cdn.socket.io/4.7.5/socket.io.js"></script>
-    <script type="text/javascript" src="{{ url_for('static', filename='scripts/timer.js') }}"></script>
-</head>
-<body>
-<h1> Комната {{code}} </h1>
-<p id="pcount"></p>
-<button id="startBtn">START</button>
-<script type="text/javascript" src="{{ url_for('static', filename='scripts/coop.js') }}"></script>
-<div id="messages">
-    <div>
-        <input type="text" id="message" placeholder="Message">
-        <button id="sendBtn">Send</button>
-    </div>
-</div>
-<div id="quiz">
-    <p id="vopros"></p>
-    <p id="countdown"></p>
-    <input type="radio" name="answers" value="0"><div id="ans0"></div></input><br>
-    <input type="radio" name="answers" value="1"><div id="ans1"></div></input><br>
-    <input type="radio" name="answers" value="2"><div id="ans2"></div></input><br>
-    <input type="radio" name="answers" value="3"><div id="ans3"></div></input><br>
-    <button id="ansBtn">Answer</button>
-</div>
-<div id="results"></div>
-<form action="/coop" >
-    <button> ВЫЙТИ </button>
-</form>
-</body>
+    <script
+      type="text/javascript"
+      src="{{ url_for('static', filename='scripts/timer.js') }}"
+    ></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='style.css') }}"
+    />
+
+    <title>Игра в команде</title>
+  </head>
+  <body>
+    <header class="header">
+      <section class="container">
+        <div class="header-row">
+          <a href="/mode" class="logo"
+            ><div class="imglogo">
+              <img
+                src="{{ url_for('static', filename='img/Vector1.png') }}"
+                alt="1"
+              />
+            </div>
+            <div class="text-logo">
+              Онлайн<span class="bluelogo">Викторины</span>
+            </div></a
+          >
+          <div class="header-flex">
+            <a href="/rating" class="rating">Рейтинг</a>
+            <a href="/authorization" class="enter"
+              ><div class="authOnButton">
+                <div class="topAuthOn">{{name}}</div>
+                <div class="bottomAuthOn">{{score}}</div>
+              </div></a
+            >
+          </div>
+        </div>
+      </section>
+    </header>
+    <main>
+      <section class="container">
+        <script
+          type="text/javascript"
+          src="{{ url_for('static', filename='scripts/coop.js') }}"
+        ></script>
+        <div class="big-flex">
+          <section class="block-1">
+            <div class="block-room">
+              <div class="room">
+                <div class="flex-svg">
+                  <img
+                    src="{{ url_for('static', filename='img/Arrow.svg')}}"
+                    alt="Arrow"
+                    onclick="location.href='/coop'"
+                  />
+                  <h1 class="title-game">Комната {{code}}</h1>
+                </div>
+              </div>
+              <h1 class="quest" id="vopros">Вопрос</h1>
+              <div class="room-quest" id="results">
+                <button class="answer" id="startBtn">СТАРТ</button>
+              </div>
+              <div class="room-quest" id="quiz">
+				<p id="countdown"></p>
+                <button class="variation" id="ans0">Вариант 1</button>
+                <button class="variation" id="ans1">Вариант 2</button>
+                <button class="variation" id="ans2">Вариант 3</button>
+                <button class="variation" id="ans3">Вариант 4</button>
+              </div>
+            </div>
+          </section>
+          <section class="block-2">
+            <div class="chat">
+              <div style="overflow-y: scroll; font-size: medium;" id="messages" class="chatUpper">Чат</div>
+              <input class="bottomChat" id="send" placeholder="Написать сообщение...">
+            </div>
+          </section>
+        </div>
+      </section>
+    </main>
+  </body>
 </html>

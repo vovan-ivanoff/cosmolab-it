@@ -10,16 +10,15 @@
 			rel="stylesheet"
 		/>
 		<link rel="stylesheet" href="static/style.css" />
+
 		<title>Document</title>
 	</head>
-
 	<body>
 		<header class="header">
 			<section class="container">
-
 				<div class="header-row">
 					<a href="/mode" class="logo"
-						><div class="imglogo"><img src=static/img/Vector1.png" alt="1" /></div>
+						><div class="imglogo"><img src="static/img/Vector1.png" alt="1" /></div>
 						<div class="text-logo">
 							Онлайн<span class="bluelogo">Викторины</span>
 						</div></a
@@ -27,33 +26,24 @@
 					<div class="header-flex">
 						<a href="/rating" class="rating">Рейтинг</a>
 						<a href="/authorization" class="enter"
-              ><img src="static/img/ava.png" alt="1" width="30" height="30" />
-              <div class="authOnButton">
-                <div class="topAuthOn">{{name}}</div>
-                <div class="bottomAuthOn">счет: {{score}}</div>
-              </div></a
-            >
+							><div class="authOnButton">
+								<div class="topAuthOn">name</div>
+								<div class="bottomAuthOn">123</div>
+							</div></a
+						>
 					</div>
 				</div>
 			</section>
 		</header>
 		<main>
 			<section class="container">
-				<h1>{{cur_que['name']}}</h1>
-				<form action="/get_zip" method="post">
-{% for i in range(cur_que['amount']) %}
-    <label> {{i + 1}}.Вопрос: </label>
-
-					<div class="inputLabel"><input  type="text" name=ans{{i}} /></div><br>
-    <p>Варианты ответов:<br>
-					<div class="inputLabel"><input type="text" name=cor{{i}} /><label> - правильный ответ   </label><br></div>
-    {% for j in range(3) %}
-        <div class="inputLabel"><input  class="inputLabel" type="text" name={{i}}/{{j}} /></div><br>
-    {% endfor %}
-    <br>
-{% endfor %}
-    <input type="submit" value="Скачать архив"/>
-</form>
+				<div class="block-party">
+					<a href="/mode"><img class="arrowback" src="static/img/Arrow.svg" alt="" /></a>
+					<div class="create-room-3">
+						<div class="text-upload">Вопросы добавлены</div>
+						<img src="static/img/teenyicons_tick-circle-outline.svg" alt="" />
+					</div>
+				</div>
 			</section>
 		</main>
 	</body>

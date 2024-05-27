@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
+			rel="stylesheet"
+		/>
+		<link rel="stylesheet" href="/static/style.css" />
+
+		<title>Document</title>
+	</head>
+	<body>
+		<header class="header">
+            <section class="container">
+                <div class="header-row">
+					
+                    <a href="/mode" class="logo"><div class="imglogo"><img src="static/img/Vector1.png" alt="1"></div><div class="text-logo">Онлайн<span class="bluelogo">Викторины</span></div></a>
+                    <div class="header-flex">
+                        <a href="/rating" class="rating">Рейтинг</a>
+                        <a href="/authorization" class="enter"><div class="authOnButton"><div class="topAuthOn">name</div><div class="bottomAuthOn">123</div></div></a>
+                    </div>
+                </div>
+            </section>
+        </header>
+				<main>
+		<section class="container">
+				<div class="block-party1">
+					<div>
+						<div class="titleload">Скачать архив <img src="static/img/arrow.png" alt="1"> <a href="/questions.que" download> скачать </a></div>
+					</div>
+					<div class="textload">
+						Если хотите добавить свои вопросы на сайт, то добавьте скачанный архив
+					</div>
+					<div class="fff">
+						<img src="static/img/ph_arrow-up-light.png" alt="1">
+					</div>
+				</div>
+				<form class="buttonsload" action="/add_quiz" enctype="multipart/form-data" method="post">
+					<input class="custom-file-input" type="file" name='file'>
+					<input class="button2load" type="submit" value="Отправить">
+				</form>
+			</div>
+		</section>
+		</main>
+	</body>
+</html>

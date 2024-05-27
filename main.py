@@ -1,5 +1,6 @@
 from string import ascii_uppercase
 import json
+import os
 import random
 import sqlite3
 from hashlib import sha256
@@ -326,8 +327,19 @@ def create_quiz():
 @app.route('/make_quiz/<i>', methods=['POST', 'GET'])
 def make_quiz(i):
     if request.method == 'POST':
+        print(request.form)
+        print(request.files)
         tmp = {}
-        tmp['question'] = request.form['ans']
+        if 'file' in request.files:
+            img = request.files['file']
+            try:
+                os.mkdir(f"./static/usr/{session['create']['name']}")
+            except FileExistsError:
+                pass
+            img.save(f'./static/usr/{session['create']['name']}/{img.filename}')
+            tmp['question'] = f'<img src="/static/usr/{session['create']['name']}/{img.filename}">'
+        else:
+            tmp['question'] = request.form['ans']
         tmp['answers'] = [request.form['cor']]
         for j in range(3):
             tmp['answers'].append(request.form['0' + '/' + str(j)])

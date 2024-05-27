@@ -221,7 +221,7 @@ def show_rating():
 
 @app.route('/mode')
 def quiz():
-    return render_template('mode.html',
+    return render_template('main.html',
                            title="Выбор режима",
                            name=session['username'])
 
@@ -312,15 +312,36 @@ def registration():
 
 @app.route('/create_quiz', methods=['POST', 'GET'])
 def create_quiz():
+    session['create'] = {}
+    global cur_que
+    if request.method == 'POST':
+        session['create']['name'] = request.form['name_quiz']
+        session['create']['amount'] = int(request.form['amount'])
+        cur_que = {}
+        cur_que[session['create']['name']] = []
+        return redirect('/make_quiz/0')
     return render_template('create_quiz.html')
 
 
-@app.route('/make_quiz', methods=['POST', 'GET'])
-def make_quiz():
+@app.route('/make_quiz/<i>', methods=['POST', 'GET'])
+def make_quiz(i):
     if request.method == 'POST':
-        cur_que['name'] = request.form['name_quiz']
-        cur_que['amount'] = int(request.form['amount'])
-    return render_template('make_quiz.html', cur_que=cur_que)
+        tmp = {}
+        tmp['question'] = request.form['ans']
+        tmp['answers'] = [request.form['cor']]
+        for j in range(3):
+            tmp['answers'].append(request.form['0' + '/' + str(j)])
+        tmp['correct'] = 0
+        tmp['time'] = 30
+        print(tmp)
+        cur_que[session['create']['name']] += [tmp]
+        print(session['create'])
+        if int(i)+1 >= session['create']['amount']:
+            return redirect('/get_zip')
+        else:
+            return redirect(f'/make_quiz/{int(i)+1}')
+    return render_template('make_quiz.html', theme=session['create']['name'],
+                           number=int(i))
 
 
 def add_new_que_to_bd():
@@ -348,31 +369,22 @@ def add_new_que_to_bd():
 
 @app.route('/get_zip', methods=['POST', 'GET'])
 def get_zip():
-    if request.method == 'POST':
-        print(request.form)
-        json_data = {cur_que['name']: []}
-        for i in range(int(len(request.form) / 5)):
-            json_data[cur_que['name']].append({"question": request.form['ans' + str(i)]})
-            json_data[cur_que['name']][i]["answers"] = [request.form['cor' + str(i)]]
-            for j in range(3):
-                json_data[cur_que['name']][i]["answers"].append(request.form[str(i) + '/' + str(j)])
-            json_data[cur_que['name']][i]['correct'] = 0
-            json_data[cur_que['name']][i]['time'] = 30
-
-        # перемешиваем варианты ответов
-        for i in json_data[cur_que['name']]:
-            shift = random.randint(0, 4)
-            i['correct'] = shift % 4
-            temp_ans = [0] * 4
-            for j in range(len(i['answers'])):
-                temp_ans[(j + shift) % 4] = i['answers'][j]
-            i['answers'] = temp_ans
-        json_loaded = json.dumps(json_data, ensure_ascii=False, indent=2)
-        with open('temp.json', 'w', encoding="UTF-8") as f:
-            f.write(json_loaded)
-        # в зип
-        with zipfile.ZipFile('questions.que', "w", compression=zipfile.ZIP_DEFLATED) as ziphelper:
-            ziphelper.write('temp.json')
+    print(session['create'])
+    json_data = cur_que.copy()
+    # перемешиваем варианты ответов
+    for i in json_data[session['create']['name']]:
+        shift = random.randint(0, 4)
+        i['correct'] = shift % 4
+        temp_ans = [0] * 4
+        for j in range(len(i['answers'])):
+            temp_ans[(j + shift) % 4] = i['answers'][j]
+        i['answers'] = temp_ans
+    json_loaded = json.dumps(json_data, ensure_ascii=False, indent=2)
+    with open('temp.json', 'w', encoding="UTF-8") as f:
+        f.write(json_loaded)
+    # в зип
+    with zipfile.ZipFile('questions.que', "w", compression=zipfile.ZIP_DEFLATED) as ziphelper:
+        ziphelper.write('temp.json')
 
     return render_template('get_zip.html')
 

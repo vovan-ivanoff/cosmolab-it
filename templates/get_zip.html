@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Загрузить свою викторину</title>
+</head>
+<body>
+Скачать архив -> <a href="/questions.que" download>скачать</a><br>
+Если хотите добавить свои вопросы на сайт то добавьте скачанный архив ↓
+<form action="/add_quiz" enctype="multipart/form-data" method="post">
+   <p><input type="file" name='file'>
+   <input type="submit" value="Отправить"></p>
+  </form>
+</body>
+</html>

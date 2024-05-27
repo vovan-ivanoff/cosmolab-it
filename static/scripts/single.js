@@ -3,24 +3,56 @@ $(document).ready(function () {
     var d;
     var t;
     $("#quiz").hide();
+    $("#vopros").hide();
     $("#startBtn").on("click", function () {
       $("#results").hide();
       theme = $('input[name="themes"]:checked').val();
       socket.emit("start", theme);
     });
-    socket.on("pcount", function (data) {
-      $("#pcount").text(data);
+    $("#ans0").on("click", function () {
+      if (d["correct"] == 0) {
+        socket.emit("answer", "corr");
+      }
+      else {
+        socket.emit("answer", "not_corr");
+      }
+      t.stop();
+    });
+    $("#ans1").on("click", function () {
+      if (d["correct"] == 1) {
+        socket.emit("answer", "corr");
+      } else {
+        socket.emit("answer", "not_corr");
+      }
+      t.stop();
+    });
+    $("#ans2").on("click", function () {
+      if (d["correct"] == 2) {
+        socket.emit("answer", "corr");
+      } else {
+        socket.emit("answer", "not_corr");
+      }
+      t.stop();
+    });
+    $("#ans3").on("click", function () {
+      if (d["correct"] == 3) {
+        socket.emit("answer", "corr");
+      } else {
+        socket.emit("answer", "not_corr");
+      }
+      t.stop();
     });
     socket.on("themes", function (data) {
       console.log(data);
       for (let i = 0; i < data.length; i++) {
-        tmpl = `<input type="radio" name="themes" value="${data[i]}">${data[i]}}</input><br>`;
+        tmpl = `<input type="radio" name="themes" class="variation" value="${data[i]}">${data[i]}</input><br>`;
         $("#results").append(tmpl);
       }
     });
     socket.on("question", function (data) {
       $("#quiz").show();
       $("#results").hide();
+      $("#vopros").show();
       $("#vopros").text(data["question"]);
       d = data;
       for (let i = 0; i < 4; i++) {
@@ -38,7 +70,7 @@ $(document).ready(function () {
         onTimeUp: function () {
           // onTimeUp callback
           this.stop();
-          socket.emit("s_answer", "not-corr");
+          socket.emit("answer", "not-corr");
         },
         onTimeUpdate: function () {
           // onTimeUpdate callback
@@ -50,14 +82,6 @@ $(document).ready(function () {
         },
       });
     });
-    $("#ansBtn").on("click", function () {
-      if ($('input[name="answers"]:checked').val() == d["correct"]) {
-        socket.emit("answer", "corr");
-      } else {
-        socket.emit("answer", "not_corr");
-      }
-      t.stop();
-    });
     socket.on("end", function (data) {
       res = "";
       for (var i in data) {
@@ -65,6 +89,7 @@ $(document).ready(function () {
         res += data[i] + "<br>"; //alerts key's value
       }
       $("#quiz").hide();
+      $("#vopros").hide();
       $("#results").html(res);
       $("#results").show();
     });

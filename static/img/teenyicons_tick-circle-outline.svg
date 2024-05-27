@@ -1,0 +1,14 @@
+<svg width="52.000000" height="52.000000" viewBox="0 0 52 52" fill="none" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+	<desc>
+			Created with Pixso.
+	</desc>
+	<defs>
+		<clipPath id="clip124_1228">
+			<rect id="teenyicons:tick-circle-outline" width="52.000000" height="52.000000" fill="white" fill-opacity="0"/>
+		</clipPath>
+	</defs>
+	<rect id="teenyicons:tick-circle-outline" width="52.000000" height="52.000000" fill="#FFFFFF" fill-opacity="0"/>
+	<g clip-path="url(#clip124_1228)">
+		<path id="Vector" d="M13.86 26L24.26 34.66L38.13 17.33M16.71 48.41C13.76 47.2 11.09 45.41 8.84 43.15C6.58 40.9 4.8 38.23 3.58 35.28C2.36 32.34 1.73 29.18 1.73 26C1.73 22.81 2.36 19.65 3.58 16.71C4.8 13.76 6.58 11.09 8.84 8.84C11.09 6.58 13.76 4.8 16.71 3.58C19.65 2.36 22.81 1.73 26 1.73C32.43 1.73 38.6 4.29 43.15 8.84C47.71 13.39 50.26 19.56 50.26 26C50.26 32.43 47.71 38.6 43.15 43.15C38.6 47.71 32.43 50.26 26 50.26C22.81 50.26 19.65 49.63 16.71 48.41Z" stroke="#9747FF" stroke-opacity="1.000000" stroke-width="1.000000"/>
+	</g>
+</svg>

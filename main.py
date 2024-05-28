@@ -393,7 +393,6 @@ def add_new_que_to_bd():
                 ans_4 = questions[i][j]['answers'][3]
                 cor = questions[i][j]['correct']
                 time = questions[i][j]['time']
-                # print(theme, j, que, ans_1, ans_2, ans_3, ans_4, cor, time)
                 c.execute(query, (theme, j, que, ans_1,
                                   ans_2, ans_3, ans_4, int(cor), int(time)))
                 c.execute('SELECT * FROM questions')
@@ -447,42 +446,6 @@ def add_quiz():
 
     return render_template('upload.html', msg=msg, score=session['score'],
                            name=session['username'])
-
-
-# временная функция для создания дб по жсонке(потом удалить)
-def create_table():
-    db = sqlite3.connect('users_data.db')
-    c = db.cursor()
-    # c.execute('DROP TABLE questions')
-    # c.execute('''CREATE TABLE questions (
-    #     theme text,
-    #     number int,
-    #     question text,
-    #     answer_1 text,
-    #     answer_2 text,
-    #     answer_3 text,
-    #     answer_4 text,
-    #     correct int,
-    #     time int
-    #     )''')
-    query = 'INSERT INTO questions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    with open('questions.json', 'r', encoding='UTF-8') as f:
-        questions: dict = json.load(f)
-        print(questions)
-        for i in questions['questions'].keys():
-            theme = i
-            for j in range(len(questions['questions'][i])):
-                que = questions['questions'][i][j]['question']
-                ans_1 = questions['questions'][i][j]['answers'][0]
-                ans_2 = questions['questions'][i][j]['answers'][1]
-                ans_3 = questions['questions'][i][j]['answers'][2]
-                ans_4 = questions['questions'][i][j]['answers'][3]
-                cor = questions['questions'][i][j]['correct']
-                time = questions['questions'][i][j]['time']
-                c.execute(query, (theme, j, que, ans_1, ans_2,
-                                  ans_3, ans_4, int(cor), int(time)))
-                c.execute('SELECT * FROM questions')
-                db.commit()
 
 
 if __name__ == '__main__':

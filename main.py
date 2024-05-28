@@ -1,4 +1,5 @@
 from string import ascii_uppercase
+from string import ascii_uppercase
 import json
 import os
 import random
@@ -174,7 +175,8 @@ def handle_single_answer(answer):
 
 @app.route("/single")
 def single():
-    return render_template('single.html', name=session.get('username'))
+    return render_template('single.html', score=session['score'],
+                           name=session['username'])
 
 
 @app.route('/coop', methods=['POST', 'GET'])
@@ -201,12 +203,14 @@ def createroom():
                                    code=code)
         session["room"] = room
         return redirect("/room")
-    return render_template("joinroom.html", rooms=rooms)
+    return render_template("joinroom.html", rooms=rooms, score=session['score'],
+                           name=session['username'])
 
 
 @app.route("/room")
 def show_room():
-    return render_template('room.html', code=session.get('room'))
+    return render_template('room.html', code=session.get('room'), score=session['score'],
+                           name=session['username'])
 
 
 @app.route('/rating')
@@ -217,13 +221,20 @@ def show_rating():
     ids = [(row[0], row[2]) for row in cursor]
     ids = sorted(ids, reverse=True, key=lambda x: x[1])
     session['users_rating'] = ids.copy()
-    return render_template("rating.html", rows=ids)
+    return render_template("rating.html", rows=ids, score=session['score'],
+                           name=session['username'])
 
 
 @app.route('/mode')
 def quiz():
+    connection = sqlite3.connect('users_data.db')
+    cursor = connection.cursor()
+    query = "SELECT * FROM users WHERE name = ?"
+    cursor.execute(query, (session['username'],))
+    usr_psw = cursor.fetchall()
+    session['score'] = usr_psw[0][2]
     return render_template('main.html',
-                           title="Выбор режима",
+                           score=session['score'],
                            name=session['username'])
 
 
@@ -249,20 +260,45 @@ def authorize():
         if len(usr_psw) != 0:
             usr_psw = usr_psw[0]
             if usr_psw[0] == username and usr_psw[1] == crypto_password:
-                flash('вы вошли в аккаунт')
+                flash('вы вошли в аккаунт', category='success')
                 session['username'] = username
                 render_template('authorize.html', title="Вход")
                 return redirect(url_for('quiz'))
             else:
-                flash('ошибка')
+                flash('ошибка', category='error')
         else:
-            flash('такого аккаунта нет')
+            flash('такого аккаунта нет', category='error')
         # query = "SELECT * FROM users"
         # c.execute(query)
         # print(c.fetchall())
         db.commit()
         db.close()
     return render_template('authorize.html', title="Вход")
+
+
+def validate_password(password):
+    # Проверка на минимальную длину пароля
+    if len(password) < 8:
+        return False, "Пароль слишком короткий, он должен содержать минимум 8 символов."
+
+    # Проверка на наличие хотя бы одной заглавной буквы
+    if not any(c.isupper() for c in password):
+        return False, "Пароль должен содержать хотя бы одну заглавную букву."
+
+    # Проверка на наличие хотя бы одной строчной буквы
+    if not any(c.islower() for c in password):
+        return False, "Пароль должен содержать хотя бы одну строчную букву."
+
+    # Проверка на наличие хотя бы одной цифры
+    if not any(c.isdigit() for c in password):
+        return False, "Пароль должен содержать хотя бы одну цифру."
+
+    # Проверка на наличие хотя бы одного специального символа
+    if not any(c in '@#$%^& * ()_+-=' for c in password):
+        return False, "Пароль должен содержать хотя бы один специальный символ."
+
+    # Все проверки пройдены, возвращаем True
+    return True, ""
 
 
 @app.route('/registration', methods=['POST', 'GET'])
@@ -279,11 +315,11 @@ def registration():
         username = request.form['username']
         if username == "":
             error = True
-            flash('введите никнейм')
+            flash('введите никнейм', category='error')
         password = request.form['password']
         if password == "":
             error = True
-            flash('введите пароль')
+            flash('введите пароль', category='error')
 
         # mail + test of loyalty
         mail = request.form['mail']
@@ -296,17 +332,19 @@ def registration():
         c.execute(query, (username,))
         finded = c.fetchall()
         print(finded)
-        if len(finded) == 0 and correct_mail is True and error is False:
+        if len(finded) == 0 and correct_mail is True and error is False and validate_password(password)[0] is True:
             query = "INSERT INTO users VALUES (?, ?, ?, ?)"
             c.execute(query, (username, crypto_password, rating, mail))
             c.execute("SELECT * FROM users")
 
-            flash('аккаунт создан')
+            flash('аккаунт создан', category='success')
             db.commit()
         elif correct_mail is False and len(finded) == 0:
-            flash('неверно указан адрес электронной почты')
+            flash('неверно указан адрес электронной почты', category='error')
+        elif validate_password(password)[0] is False:
+            flash(validate_password(password)[1], category='error')
         if len(finded) == 1 and error is False:
-            flash('такой аккаунт уже существует')
+            flash('такой аккаунт уже существует', category='error')
         db.close()
     return render_template('registration.html', title="Регистрация")
 
@@ -398,7 +436,8 @@ def get_zip():
     with zipfile.ZipFile('questions.que', "w", compression=zipfile.ZIP_DEFLATED) as ziphelper:
         ziphelper.write('temp.json')
 
-    return render_template('get_zip.html')
+    return render_template('loadfile.html', score=session['score'],
+                           name=session['username'])
 
 
 @app.route('/questions.que')
@@ -408,13 +447,20 @@ def download_archive():
 
 @app.route('/add_quiz', methods=['POST', 'GET'])
 def add_quiz():
+    msg = 'Вопросы добавлены'
     if request.method == 'POST':
         file = request.files['file']
-        with zipfile.ZipFile(file, 'r') as zip_ref:
-            # Извлечение всех файлов в указанную директорию
-            zip_ref.extractall('uploaded_quiz')
-        add_new_que_to_bd()
-    return render_template('add_quiz.html')
+        try:
+            with zipfile.ZipFile(file, 'r') as zip_ref:
+                print('aga')
+                # Извлечение всех файлов в указанную директорию
+                zip_ref.extractall('uploaded_quiz')
+            add_new_que_to_bd()
+        except zipfile.BadZipFile:
+            msg = 'Ошибка'
+
+    return render_template('upload.html', msg=msg, score=session['score'],
+                           name=session['username'])
 
 
 # временная функция для создания дб по жсонке(потом удалить)
@@ -451,6 +497,7 @@ def create_table():
                 c.execute(query, (theme, j, que, ans_1, ans_2, ans_3, ans_4, int(cor), int(time)))
                 c.execute("SELECT * FROM questions")
                 db.commit()
+
 
 
 if __name__ == '__main__':

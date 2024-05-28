@@ -120,7 +120,7 @@ def handle_answer(answer):
 @socketio.on('message', namespace='/room')
 def handle_chat_message(message):
     result = session['username'] + ' : ' + message
-    print('Received message: ' + result)
+    
     send(result, to=session['room'])
 
 
@@ -311,7 +311,6 @@ def registration():
         query = 'SELECT * FROM users WHERE name = ?'
         c.execute(query, (username,))
         finded = c.fetchall()
-        print(finded)
         if len(finded) == 0 and correct_mail is True \
            and error is False and validate_password(password)[0] is True:
             query = 'INSERT INTO users VALUES (?, ?, ?, ?)'
@@ -346,8 +345,6 @@ def create_quiz():
 @app.route('/make_quiz/<i>', methods=['POST', 'GET'])
 def make_quiz(i):
     if request.method == 'POST':
-        print(request.form)
-        print(request.files)
         tmp = {}
         if 'file' in request.files:
             img = request.files['file']
@@ -365,9 +362,7 @@ def make_quiz(i):
             tmp['answers'].append(request.form['0' + '/' + str(j)])
         tmp['correct'] = 0
         tmp['time'] = 30
-        print(tmp)
         cur_que[session['create']['name']] += [tmp]
-        print(session['create'])
         if int(i)+1 >= session['create']['amount']:
             return redirect('/get_zip')
         else:
@@ -382,7 +377,6 @@ def add_new_que_to_bd():
     query = 'INSERT INTO questions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
     with open('uploaded_quiz/temp.json', 'r', encoding='UTF-8') as f:
         questions: dict = json.load(f)
-        print(questions)
         for i in questions.keys():
             theme = i
             for j in range(len(questions[i])):
@@ -401,7 +395,6 @@ def add_new_que_to_bd():
 
 @app.route('/get_zip', methods=['POST', 'GET'])
 def get_zip():
-    print(session['create'])
     json_data = cur_que.copy()
     # перемешиваем варианты ответов
     for i in json_data[session['create']['name']]:
@@ -437,7 +430,6 @@ def add_quiz():
         file = request.files['file']
         try:
             with zipfile.ZipFile(file, 'r') as zip_ref:
-                print('aga')
                 # Извлечение всех файлов в указанную директорию
                 zip_ref.extractall('uploaded_quiz')
             add_new_que_to_bd()

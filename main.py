@@ -1,5 +1,5 @@
 from string import ascii_uppercase
-from string import ascii_uppercase
+import zipfile
 import json
 import os
 import random
@@ -8,7 +8,6 @@ from hashlib import sha256
 from flask import Flask, render_template, url_for
 from flask import request, flash, redirect, session, send_from_directory
 from flask_socketio import SocketIO, send, emit, join_room, leave_room
-import zipfile
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '21d6t3yfuyhrewoi1en3kqw'
@@ -20,7 +19,7 @@ cur_que = {}
 
 def generate_unique_code(length):
     while True:
-        code = ""
+        code = ''
         for _ in range(length):
             code += random.choice(ascii_uppercase)
         if code not in rooms:
@@ -48,12 +47,6 @@ def generate_qs(theme):
     return tmp.copy()
 
 
-def get_themes_old():
-    with open("questions.json", 'r', encoding='UTF-8') as f:
-        questions: dict = json.load(f)['questions']
-    return list(questions.keys())
-
-
 def get_themes():
     db = sqlite3.connect('users_data.db')
     c = db.cursor()
@@ -64,11 +57,10 @@ def get_themes():
     return th
 
 
-
 def add_rating_db(rating: dict):
     connection = sqlite3.connect('users_data.db')
     cursor = connection.cursor()
-    sel_query = "SELECT rating FROM users WHERE name = ?"
+    sel_query = 'SELECT rating FROM users WHERE name = ?'
     upd_query = 'UPDATE users SET rating = ? WHERE name = ?'
     for user in rating:
         cursor.execute(sel_query, (user,))
@@ -88,27 +80,27 @@ def handle_connect(_):
     if room not in rooms:
         leave_room(room)
     join_room(room)
-    send(f"{name} заходит в чат", to=room)
+    send(f'{name} заходит в чат', to=room)
     session['coop_progress'] = 0
-    rooms[room]["members"] += 1
-    rooms[room]["result"][name] = 0
-    rooms[room]["ready"][name] = False
-    emit("pcount", rooms[room]['members'], to=room)
-    emit("themes", rooms[room]["themes"])
+    rooms[room]['members'] += 1
+    rooms[room]['result'][name] = 0
+    rooms[room]['ready'][name] = False
+    emit('pcount', rooms[room]['members'], to=room)
+    emit('themes', rooms[room]['themes'])
 
 
 @socketio.on('start', namespace='/room')
 def handle_start(theme):
-    room = session["room"]
+    room = session['room']
     questions = generate_qs(theme)
     rooms[room]['questions'] = questions
-    emit("question", rooms[room]['questions'][0], to=room)
+    emit('question', rooms[room]['questions'][0], to=room)
 
 
 @socketio.on('answer', namespace='/room')
 def handle_answer(answer):
-    room = rooms[session["room"]]
-    name = session["username"]
+    room = rooms[session['room']]
+    name = session['username']
     if answer == 'corr':
         room['result'][name] += 1
     session['coop_progress'] += 1
@@ -119,61 +111,61 @@ def handle_answer(answer):
         for n in room['ready']:
             flag = flag and room['ready'][n]
         if flag:
-            emit("end", room["result"], to=session['room'])
-            add_rating_db(room["result"])
+            emit('end', room['result'], to=session['room'])
+            add_rating_db(room['result'])
     else:
-        emit("question", room['questions'][session['coop_progress']])
+        emit('question', room['questions'][session['coop_progress']])
 
 
 @socketio.on('message', namespace='/room')
 def handle_chat_message(message):
-    result = session['username'] + " : " + message
-    print("Received message: " + result)
-    send(result, to=session["room"])
+    result = session['username'] + ' : ' + message
+    print('Received message: ' + result)
+    send(result, to=session['room'])
 
 
 @socketio.on('disconnect', namespace='/room')
 def handle_disconnect():
-    room = session.get("room")
-    name = session.get("username")
+    room = session.get('room')
+    name = session.get('username')
     leave_room(room)
     if room in rooms:
-        rooms[room]["members"] -= 1
+        rooms[room]['members'] -= 1
         rooms[room]['ready'].pop(name)
-        emit("pcount", rooms[room]['members'], to=room)
-        if rooms[room]["members"] <= 0:
+        emit('pcount', rooms[room]['members'], to=room)
+        if rooms[room]['members'] <= 0:
             del rooms[room]
-        send(f"{name} покинул(а) чат", to=room)
+        send(f'{name} покинул(а) чат', to=room)
 
 
 @socketio.on('connect', namespace='/single')
 def handle_single_connect(_):
     session['progress'] = 0
     session['correct'] = 0
-    emit("themes", get_themes())
+    emit('themes', get_themes())
 
 
 @socketio.on('start', namespace='/single')
 def handle_single_start(theme):
     questions = generate_qs(theme)
     session['questions'] = questions
-    emit("question", session['questions'][0])
+    emit('question', session['questions'][0])
 
 
 @socketio.on('answer', namespace='/single')
 def handle_single_answer(answer):
-    name = session["username"]
+    name = session['username']
     if answer == 'corr':
         session['correct'] += 1
     session['progress'] += 1
     if session['progress'] >= len(session['questions']):
-        emit("end", {name: session['correct']})
+        emit('end', {name: session['correct']})
         add_rating_db({name: session['correct']})
     else:
-        emit("question", session['questions'][session['progress']])
+        emit('question', session['questions'][session['progress']])
 
 
-@app.route("/single")
+@app.route('/single')
 def single():
     return render_template('single.html', score=session['score'],
                            name=session['username'])
@@ -181,35 +173,37 @@ def single():
 
 @app.route('/coop', methods=['POST', 'GET'])
 def createroom():
-    if request.method == "POST":
-        # session['name'] = request.form.get("name_room")
-        code = request.form.get("code")
-        join = request.form.get("join", False)
-        create = request.form.get("create", False)
+    if request.method == 'POST':
+        code = request.form.get('code')
+        join = request.form.get('join', False)
+        create = request.form.get('create', False)
         if join is not False and not code:
-            return render_template("joinroom.html",
-                                   error="Please enter a room code.",
+            return render_template('joinroom.html',
+                                   error='Please enter a room code.',
                                    code=code)
         room = code
         if create is not False:
             room = generate_unique_code(4)
-            rooms[room] = {"members": 0,
+            rooms[room] = {'members': 0,
                            'result': {},
                            'themes': get_themes(),
                            'ready': {}}
         elif code not in rooms:
-            return render_template("joinroom.html",
-                                   error="Room does not exist.",
+            return render_template('joinroom.html',
+                                   error='Room does not exist.',
                                    code=code)
-        session["room"] = room
-        return redirect("/room")
-    return render_template("joinroom.html", rooms=rooms, score=session['score'],
+        session['room'] = room
+        return redirect('/room')
+    return render_template('joinroom.html', rooms=rooms,
+                           score=session['score'],
                            name=session['username'])
 
 
-@app.route("/room")
+@app.route('/room')
 def show_room():
-    return render_template('room.html', code=session.get('room'), score=session['score'],
+    return render_template('room.html',
+                           code=session.get('room'),
+                           score=session['score'],
                            name=session['username'])
 
 
@@ -217,11 +211,13 @@ def show_room():
 def show_rating():
     connection = sqlite3.connect('users_data.db')
     cursor = connection.cursor()
-    cursor.execute("SELECT * FROM users")
+    cursor.execute('SELECT * FROM users')
     ids = [(row[0], row[2]) for row in cursor]
     ids = sorted(ids, reverse=True, key=lambda x: x[1])
     session['users_rating'] = ids.copy()
-    return render_template("rating.html", rows=ids, score=session['score'],
+    return render_template('rating.html',
+                           rows=ids,
+                           score=session['score'],
                            name=session['username'])
 
 
@@ -229,7 +225,7 @@ def show_rating():
 def quiz():
     connection = sqlite3.connect('users_data.db')
     cursor = connection.cursor()
-    query = "SELECT * FROM users WHERE name = ?"
+    query = 'SELECT * FROM users WHERE name = ?'
     cursor.execute(query, (session['username'],))
     usr_psw = cursor.fetchall()
     session['score'] = usr_psw[0][2]
@@ -246,15 +242,11 @@ def authorize():
     if request.method == 'POST':
         db = sqlite3.connect('users_data.db')
         c = db.cursor()
-        # c.execute("""CREATE TABLE users (
-        # name text,
-        # password text
-        # )""")
         username = request.form['username']
         password = request.form['password']
         p_and_u = password + username
         crypto_password = sha256(p_and_u.encode('utf-8')).hexdigest()
-        query = "SELECT * FROM users WHERE name = ?"
+        query = 'SELECT * FROM users WHERE name = ?'
         c.execute(query, (username,))
         usr_psw = c.fetchall()
         if len(usr_psw) != 0:
@@ -262,43 +254,37 @@ def authorize():
             if usr_psw[0] == username and usr_psw[1] == crypto_password:
                 flash('вы вошли в аккаунт', category='success')
                 session['username'] = username
-                render_template('authorize.html', title="Вход")
+                render_template('authorize.html', title='Вход')
                 return redirect(url_for('quiz'))
             else:
                 flash('ошибка', category='error')
         else:
             flash('такого аккаунта нет', category='error')
-        # query = "SELECT * FROM users"
-        # c.execute(query)
-        # print(c.fetchall())
         db.commit()
         db.close()
-    return render_template('authorize.html', title="Вход")
+    return render_template('authorize.html', title='Вход')
 
 
 def validate_password(password):
     # Проверка на минимальную длину пароля
     if len(password) < 8:
-        return False, "Пароль слишком короткий, он должен содержать минимум 8 символов."
-
+        return False, 'Пароль слишком короткий, \
+он должен содержать минимум 8 символов.'
     # Проверка на наличие хотя бы одной заглавной буквы
     if not any(c.isupper() for c in password):
-        return False, "Пароль должен содержать хотя бы одну заглавную букву."
-
+        return False, 'Пароль должен содержать хотя бы одну заглавную букву.'
     # Проверка на наличие хотя бы одной строчной буквы
     if not any(c.islower() for c in password):
-        return False, "Пароль должен содержать хотя бы одну строчную букву."
-
+        return False, 'Пароль должен содержать хотя бы одну строчную букву.'
     # Проверка на наличие хотя бы одной цифры
     if not any(c.isdigit() for c in password):
-        return False, "Пароль должен содержать хотя бы одну цифру."
-
+        return False, 'Пароль должен содержать хотя бы одну цифру.'
     # Проверка на наличие хотя бы одного специального символа
     if not any(c in '@#$%^& * ()_+-=' for c in password):
-        return False, "Пароль должен содержать хотя бы один специальный символ."
-
+        return False, 'Пароль должен содержать \
+хотя бы один специальный символ.'
     # Все проверки пройдены, возвращаем True
-    return True, ""
+    return True, ''
 
 
 @app.route('/registration', methods=['POST', 'GET'])
@@ -306,36 +292,31 @@ def registration():
     if request.method == 'POST':
         db = sqlite3.connect('users_data.db')
         c = db.cursor()
-        # c.execute("""CREATE TABLE users (
-        # name text,
-        # password text
-        # )""")
         correct_mail = True
         error = False
         username = request.form['username']
-        if username == "":
+        if username == '':
             error = True
             flash('введите никнейм', category='error')
         password = request.form['password']
-        if password == "":
+        if password == '':
             error = True
             flash('введите пароль', category='error')
-
-        # mail + test of loyalty
         mail = request.form['mail']
         if '@' not in mail:
             correct_mail = False
         rating = 0
         p_and_u = password + username
         crypto_password = sha256(p_and_u.encode('utf-8')).hexdigest()
-        query = "SELECT * FROM users WHERE name = ?"
+        query = 'SELECT * FROM users WHERE name = ?'
         c.execute(query, (username,))
         finded = c.fetchall()
         print(finded)
-        if len(finded) == 0 and correct_mail is True and error is False and validate_password(password)[0] is True:
-            query = "INSERT INTO users VALUES (?, ?, ?, ?)"
+        if len(finded) == 0 and correct_mail is True \
+           and error is False and validate_password(password)[0] is True:
+            query = 'INSERT INTO users VALUES (?, ?, ?, ?)'
             c.execute(query, (username, crypto_password, rating, mail))
-            c.execute("SELECT * FROM users")
+            c.execute('SELECT * FROM users')
 
             flash('аккаунт создан', category='success')
             db.commit()
@@ -346,7 +327,7 @@ def registration():
         if len(finded) == 1 and error is False:
             flash('такой аккаунт уже существует', category='error')
         db.close()
-    return render_template('registration.html', title="Регистрация")
+    return render_template('registration.html', title='Регистрация')
 
 
 @app.route('/create_quiz', methods=['POST', 'GET'])
@@ -371,11 +352,12 @@ def make_quiz(i):
         if 'file' in request.files:
             img = request.files['file']
             try:
-                os.mkdir(f"./static/usr/{session['create']['name']}")
+                os.mkdir(f'./static/usr/{session['create']['name']}')
             except FileExistsError:
                 pass
-            img.save(f'./static/usr/{session['create']['name']}/{img.filename}')
-            tmp['question'] = f'<img src="/static/usr/{session['create']['name']}/{img.filename}">'
+            path = f'/static/usr/{session['create']['name']}/{img.filename}'
+            img.save(f'.{path}')
+            tmp['question'] = f'<img src="{path}">'
         else:
             tmp['question'] = request.form['ans']
         tmp['answers'] = [request.form['cor']]
@@ -397,8 +379,8 @@ def make_quiz(i):
 def add_new_que_to_bd():
     db = sqlite3.connect('users_data.db')
     c = db.cursor()
-    query = "INSERT INTO questions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
-    with open("uploaded_quiz/temp.json", 'r', encoding='UTF-8') as f:
+    query = 'INSERT INTO questions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    with open('uploaded_quiz/temp.json', 'r', encoding='UTF-8') as f:
         questions: dict = json.load(f)
         print(questions)
         for i in questions.keys():
@@ -412,8 +394,9 @@ def add_new_que_to_bd():
                 cor = questions[i][j]['correct']
                 time = questions[i][j]['time']
                 # print(theme, j, que, ans_1, ans_2, ans_3, ans_4, cor, time)
-                c.execute(query, (theme, j, que, ans_1, ans_2, ans_3, ans_4, int(cor), int(time)))
-                c.execute("SELECT * FROM questions")
+                c.execute(query, (theme, j, que, ans_1,
+                                  ans_2, ans_3, ans_4, int(cor), int(time)))
+                c.execute('SELECT * FROM questions')
                 db.commit()
 
 
@@ -430,10 +413,11 @@ def get_zip():
             temp_ans[(j + shift) % 4] = i['answers'][j]
         i['answers'] = temp_ans
     json_loaded = json.dumps(json_data, ensure_ascii=False, indent=2)
-    with open('temp.json', 'w', encoding="UTF-8") as f:
+    with open('temp.json', 'w', encoding='UTF-8') as f:
         f.write(json_loaded)
     # в зип
-    with zipfile.ZipFile('questions.que', "w", compression=zipfile.ZIP_DEFLATED) as ziphelper:
+    with zipfile.ZipFile('questions.que', 'w',
+                         compression=zipfile.ZIP_DEFLATED) as ziphelper:
         ziphelper.write('temp.json')
 
     return render_template('loadfile.html', score=session['score'],
@@ -442,7 +426,9 @@ def get_zip():
 
 @app.route('/questions.que')
 def download_archive():
-    return send_from_directory(app.config['UPLOAD_FOLDER'], 'questions.que', as_attachment=True)
+    return send_from_directory(app.config['UPLOAD_FOLDER'],
+                               'questions.que',
+                               as_attachment=True)
 
 
 @app.route('/add_quiz', methods=['POST', 'GET'])
@@ -467,8 +453,8 @@ def add_quiz():
 def create_table():
     db = sqlite3.connect('users_data.db')
     c = db.cursor()
-    # c.execute("DROP TABLE questions")
-    # c.execute("""CREATE TABLE questions (
+    # c.execute('DROP TABLE questions')
+    # c.execute('''CREATE TABLE questions (
     #     theme text,
     #     number int,
     #     question text,
@@ -478,9 +464,9 @@ def create_table():
     #     answer_4 text,
     #     correct int,
     #     time int
-    #     )""")
-    query = "INSERT INTO questions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
-    with open("questions.json", 'r', encoding='UTF-8') as f:
+    #     )''')
+    query = 'INSERT INTO questions VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    with open('questions.json', 'r', encoding='UTF-8') as f:
         questions: dict = json.load(f)
         print(questions)
         for i in questions['questions'].keys():
@@ -493,13 +479,12 @@ def create_table():
                 ans_4 = questions['questions'][i][j]['answers'][3]
                 cor = questions['questions'][i][j]['correct']
                 time = questions['questions'][i][j]['time']
-                # print(theme, j, que, ans_1, ans_2, ans_3, ans_4, cor, time)
-                c.execute(query, (theme, j, que, ans_1, ans_2, ans_3, ans_4, int(cor), int(time)))
-                c.execute("SELECT * FROM questions")
+                c.execute(query, (theme, j, que, ans_1, ans_2,
+                                  ans_3, ans_4, int(cor), int(time)))
+                c.execute('SELECT * FROM questions')
                 db.commit()
-
 
 
 if __name__ == '__main__':
     # app.run(debug=True)
-    socketio.run(app, host="localhost", allow_unsafe_werkzeug=True, debug=True)
+    socketio.run(app, host='localhost', allow_unsafe_werkzeug=True, debug=True)
